@@ -1,0 +1,13 @@
+# Enforce LF for source code
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# Treat geospatial and binary assets as binary
+*.geojson binary
+*.shp binary
+*.dbf binary
+*.shx binary
+*.png binary
+*.jpg binary
