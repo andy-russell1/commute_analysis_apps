@@ -316,7 +316,8 @@ class CommutePlugin(AppPlugin):
         def _format_method_label(value: str) -> str:
             if value == BEST_LABEL:
                 return BEST_LABEL
-            return str(value).replace("+", " + ").strip().title()
+            label = str(value).replace("_", " ").replace("+", " + ").strip()
+            return label.title()
 
         style_block = """
             <style>
