@@ -315,6 +315,24 @@ class CommutePlugin(AppPlugin):
 
         style_block = """
             <style>
+            .presentation-params {
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: rgba(49, 51, 63, 0.8);
+                margin-top: 0.25rem;
+                margin-bottom: 0.5rem;
+                line-height: 1.3;
+            }
+            .presentation-actions button {
+                width: 100%;
+            }
+            .presentation-mode [data-testid="stSidebar"],
+            .presentation-mode header,
+            .presentation-mode footer,
+            .presentation-mode .stToolbar,
+            .presentation-mode [data-testid="stStatusWidget"] {
+                display: none !important;
+            }
             .source-caption {
                 font-size: 0.875rem;
                 color: rgba(49, 51, 63, 0.6);
@@ -346,6 +364,9 @@ class CommutePlugin(AppPlugin):
         st.markdown(style_block, unsafe_allow_html=True)
         office_lookup = {o["officeID"]: o for o in offices}
         office_ids = [o["officeID"] for o in offices]
+
+        if "presentation_mode" not in st.session_state:
+            st.session_state["presentation_mode"] = False
 
         header_cols = st.columns([5, 2])
         with header_cols[0]:
@@ -397,6 +418,31 @@ class CommutePlugin(AppPlugin):
                 key="travel_time_range",
             )
             min_time, max_time = travel_time_range
+
+            st.divider()
+            st.markdown("**Presentation mode**")
+            if st.session_state["presentation_mode"]:
+                if st.button("Exit presentation mode", key="presentation_off"):
+                    st.session_state["presentation_mode"] = False
+            else:
+                if st.button("Enable presentation mode", key="presentation_on"):
+                    st.session_state["presentation_mode"] = True
+
+            st.markdown("**Screenshot shortcut**")
+            st.markdown(
+                "Use your browser: `Ctrl+Shift+I` → `Ctrl+Shift+P` → `Capture full size screenshot`."
+            )
+
+        if st.session_state["presentation_mode"]:
+            st.markdown('<div class="presentation-mode">', unsafe_allow_html=True)
+            office_obj = office_lookup[office_id]
+            param_line = "Office: {0} | Transport Mode: {1} | Time range: {2}-{3} mins".format(
+                office_obj["address"],
+                method,
+                int(min_time),
+                int(max_time),
+            )
+            st.markdown('<div class="presentation-params">{0}</div>'.format(param_line), unsafe_allow_html=True)
 
         df_valid_range = df_valid.copy()
         df_valid_range["travel_time_min"] = pd.to_numeric(df_valid_range["travel_time_min"], errors="coerce")
@@ -635,6 +681,9 @@ class CommutePlugin(AppPlugin):
 
             with st.expander("View table", expanded=False):
                 st.dataframe(wide_all, use_container_width=True, height=420)
+
+        if st.session_state["presentation_mode"]:
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
 
