@@ -369,7 +369,7 @@ class CommutePlugin(AppPlugin):
                 format_func=lambda oid: office_lookup[oid]["address"],
                 key="office_select",
             )
-            method = st.selectbox("Method", [BEST_LABEL] + methods, index=0, key="method_select")
+            method = st.selectbox("Transport Method", [BEST_LABEL] + methods, index=0, key="method_select")
 
             tt_series = _method_time_series(df_valid, method, BEST_LABEL)
             range_max = int(math.ceil(tt_series.max())) if not tt_series.empty else 90
