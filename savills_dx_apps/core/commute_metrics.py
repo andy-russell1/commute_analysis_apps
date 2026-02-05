@@ -36,6 +36,8 @@ def select_office_method(
     office_id_col: str = "officeID",
     method_col: str = "method",
     tt_col: str = "travel_time_min",
+    min_time: float | None = None,
+    max_time: float | None = None,
 ) -> pd.DataFrame:
     _ensure_cols(df_valid, [emp_id_col, office_id_col, method_col, tt_col])
     d = df_valid[df_valid[office_id_col].astype(str) == str(office_id)].copy()
@@ -48,9 +50,14 @@ def select_office_method(
         out = d.loc[idx].copy()
         out["best_method"] = out[method_col].astype(str)
         out[method_col] = best_label
-        return out.sort_values(tt_col, ascending=True, na_position="last")
+    else:
+        out = d[d[method_col].astype(str) == str(method)].copy()
 
-    out = d[d[method_col].astype(str) == str(method)].copy()
+    if min_time is not None:
+        out = out[_as_float(out[tt_col]) >= float(min_time)]
+    if max_time is not None:
+        out = out[_as_float(out[tt_col]) <= float(max_time)]
+
     return out.sort_values(tt_col, ascending=True, na_position="last")
 
 
@@ -60,13 +67,22 @@ def office_stats(
     method: str,
     *,
     best_label: str = "Best",
+    min_time: float | None = None,
+    max_time: float | None = None,
 ) -> pd.DataFrame:
     labels = _office_labels(offices)
     rows = []
 
     for o in offices:
         oid = str(o.get("officeID"))
-        d = select_office_method(df_valid, oid, method, best_label=best_label)
+        d = select_office_method(
+            df_valid,
+            oid,
+            method,
+            best_label=best_label,
+            min_time=min_time,
+            max_time=max_time,
+        )
         vals = _as_float(d["travel_time_min"]).dropna().to_numpy(dtype="float64")
         n = int(vals.size)
 
@@ -91,6 +107,8 @@ def threshold_bands(
     *,
     best_label: str = "Best",
     thresholds: Tuple[float, float, float] = (30.0, 45.0, 60.0),
+    min_time: float | None = None,
+    max_time: float | None = None,
 ) -> pd.DataFrame:
     t1, t2, t3 = thresholds
     labels = _office_labels(offices)
@@ -98,7 +116,14 @@ def threshold_bands(
     rows = []
     for o in offices:
         oid = str(o.get("officeID"))
-        d = select_office_method(df_valid, oid, method, best_label=best_label)
+        d = select_office_method(
+            df_valid,
+            oid,
+            method,
+            best_label=best_label,
+            min_time=min_time,
+            max_time=max_time,
+        )
         vals = _as_float(d["travel_time_min"]).dropna().to_numpy(dtype="float64")
         n = int(vals.size)
 
@@ -135,8 +160,17 @@ def explore_table(
     method: str,
     *,
     best_label: str = "Best",
+    min_time: float | None = None,
+    max_time: float | None = None,
 ) -> pd.DataFrame:
-    d = select_office_method(df_valid, office_id, method, best_label=best_label).copy()
+    d = select_office_method(
+        df_valid,
+        office_id,
+        method,
+        best_label=best_label,
+        min_time=min_time,
+        max_time=max_time,
+    ).copy()
 
     for c in ["postcode", "city", "country", "lat", "lon"]:
         if c not in d.columns:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import io
+import math
 
 import pandas as pd
 import plotly.express as px
@@ -292,16 +293,47 @@ class CommutePlugin(AppPlugin):
             query_print = query_print[0] if query_print else "0"
         is_print_view = str(query_print).lower() in {"1", "true", "yes"}
 
+        def _parse_query_range(query_obj) -> tuple[float, float] | None:
+            q_min = query_obj.get("tt_min")
+            q_max = query_obj.get("tt_max")
+            if isinstance(q_min, list):
+                q_min = q_min[0] if q_min else None
+            if isinstance(q_max, list):
+                q_max = q_max[0] if q_max else None
+            try:
+                q_min_f = float(q_min) if q_min is not None else None
+                q_max_f = float(q_max) if q_max is not None else None
+            except Exception:
+                return None
+            if q_min_f is None or q_max_f is None:
+                return None
+            return (q_min_f, q_max_f)
+
+        def _method_time_series(df: pd.DataFrame, method: str, best_label: str) -> pd.Series:
+            d = df.copy()
+            d["travel_time_min"] = pd.to_numeric(d["travel_time_min"], errors="coerce")
+            if method == best_label:
+                if d.empty:
+                    return pd.Series(dtype="float64")
+                d = d.sort_values("travel_time_min", ascending=True, na_position="last")
+                d = d.drop_duplicates(subset=["officeID", "employeeID"], keep="first")
+                return d["travel_time_min"].dropna()
+            return d.loc[d["method"].astype(str) == str(method), "travel_time_min"].dropna()
+
         def _set_print_view(enable: bool) -> None:
             params = {k: v for k, v in query.items() if k != "print"}
             if enable:
                 params["print"] = ["1"]
                 office_param = st.session_state.get("office_select")
                 method_param = st.session_state.get("method_select")
+                tt_range = st.session_state.get("travel_time_range")
                 if office_param:
                     params["office"] = [str(office_param)]
                 if method_param:
                     params["method"] = [str(method_param)]
+                if tt_range and isinstance(tt_range, (list, tuple)) and len(tt_range) == 2:
+                    params["tt_min"] = [str(tt_range[0])]
+                    params["tt_max"] = [str(tt_range[1])]
             st.query_params.clear()
             for k, v in params.items():
                 if isinstance(v, list):
@@ -510,6 +542,22 @@ class CommutePlugin(AppPlugin):
             if method not in [BEST_LABEL] + methods:
                 method = BEST_LABEL
 
+            tt_series = _method_time_series(df_valid, method, BEST_LABEL)
+            range_max = int(math.ceil(tt_series.max())) if not tt_series.empty else 90
+            range_max = max(range_max, 90)
+            default_max = min(90, range_max)
+            range_from_query = _parse_query_range(query)
+            if range_from_query:
+                min_time, max_time = range_from_query
+                min_time = max(0.0, min_time)
+                max_time = min(float(range_max), max_time)
+                if min_time > max_time:
+                    min_time = max_time
+            elif "travel_time_range" in st.session_state:
+                min_time, max_time = st.session_state["travel_time_range"]
+            else:
+                min_time, max_time = 0.0, float(default_max)
+
             st.markdown('<div class="print-hide">', unsafe_allow_html=True)
             if st.button("Exit print view", key="print_view_off"):
                 _set_print_view(False)
@@ -532,12 +580,26 @@ class CommutePlugin(AppPlugin):
                 )
             st.markdown("</div>", unsafe_allow_html=True)
 
-            emp_tbl = explore_table(df_valid, office_id=office_id, method=method, best_label=BEST_LABEL)
+            emp_tbl = explore_table(
+                df_valid,
+                office_id=office_id,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
             emp_tbl = drop_fully_empty_columns(emp_tbl)
             sample_size = len(emp_tbl)
 
             st.markdown('<div class="print-kpis">', unsafe_allow_html=True)
-            stats_df = office_stats(df_valid, offices, method=method, best_label=BEST_LABEL)
+            stats_df = office_stats(
+                df_valid,
+                offices,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
             col1, col2, col3, col4 = st.columns(4)
 
             if stats_df.empty:
@@ -586,8 +648,22 @@ class CommutePlugin(AppPlugin):
 
             st.markdown('<div class="print-compare">', unsafe_allow_html=True)
             st.subheader("Office comparison")
-            stats_df = office_stats(df_valid, offices, method=method, best_label=BEST_LABEL)
-            bands_df = threshold_bands(df_valid, offices, method=method, best_label=BEST_LABEL)
+            stats_df = office_stats(
+                df_valid,
+                offices,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
+            bands_df = threshold_bands(
+                df_valid,
+                offices,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
             office_order = (
                 stats_df.sort_values("Median (mins)", ascending=False, na_position="last")["Office"].tolist()
                 if not stats_df.empty
@@ -709,17 +785,58 @@ class CommutePlugin(AppPlugin):
             )
             method = st.selectbox("Method", [BEST_LABEL] + methods, index=0, key="method_select")
 
+            tt_series = _method_time_series(df_valid, method, BEST_LABEL)
+            range_max = int(math.ceil(tt_series.max())) if not tt_series.empty else 90
+            range_max = max(range_max, 90)
+            default_max = min(90, range_max)
+
+            if st.session_state.get("tt_range_method") != method:
+                st.session_state["travel_time_range"] = (0, int(default_max))
+                st.session_state["tt_range_method"] = method
+            if "travel_time_range" not in st.session_state:
+                st.session_state["travel_time_range"] = (0, int(default_max))
+
+            travel_time_range = st.slider(
+                "Travel time range (mins)",
+                min_value=0,
+                max_value=range_max,
+                value=st.session_state["travel_time_range"],
+                step=1,
+                key="travel_time_range",
+            )
+            min_time, max_time = travel_time_range
+
+        df_valid_range = df_valid.copy()
+        df_valid_range["travel_time_min"] = pd.to_numeric(df_valid_range["travel_time_min"], errors="coerce")
+        df_valid_range = df_valid_range[
+            df_valid_range["travel_time_min"].between(min_time, max_time, inclusive="both")
+        ].copy()
+
         tab_explore, tab_compare, tab_downloads = st.tabs(["Explore", "Compare", "Downloads + PDF"])
 
         with tab_explore:
             office_obj = office_lookup[office_id]
 
-            emp_tbl = explore_table(df_valid, office_id=office_id, method=method, best_label=BEST_LABEL)
+            emp_tbl = explore_table(
+                df_valid,
+                office_id=office_id,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
             emp_tbl = drop_fully_empty_columns(emp_tbl)
 
             st.subheader("Office comparison")
             st.markdown('<div class="kpi-block">', unsafe_allow_html=True)
-            stats_df = office_stats(df_valid, offices, method=method, best_label=BEST_LABEL)
+            stats_df = office_stats(
+                df_valid,
+                offices,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
             if not stats_df.empty:
                 col1, col2, col3, col4 = st.columns(4)
 
@@ -766,10 +883,24 @@ class CommutePlugin(AppPlugin):
 
         with tab_compare:
             st.subheader("Office comparison")
-            stats_df = office_stats(df_valid, offices, method=method, best_label=BEST_LABEL)
+            stats_df = office_stats(
+                df_valid,
+                offices,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
 
             if not stats_df.empty:
-                emp_tbl = explore_table(df_valid, office_id=office_id, method=method, best_label=BEST_LABEL)
+                emp_tbl = explore_table(
+                    df_valid,
+                    office_id=office_id,
+                    method=method,
+                    best_label=BEST_LABEL,
+                    min_time=min_time,
+                    max_time=max_time,
+                )
                 sample_size = len(emp_tbl)
                 col1, col2, col3, col4 = st.columns(4)
 
@@ -791,7 +922,14 @@ class CommutePlugin(AppPlugin):
 
             st.divider()
 
-            bands_df = threshold_bands(df_valid, offices, method=method, best_label=BEST_LABEL)
+            bands_df = threshold_bands(
+                df_valid,
+                offices,
+                method=method,
+                best_label=BEST_LABEL,
+                min_time=min_time,
+                max_time=max_time,
+            )
             office_order = (
                 stats_df.sort_values("Median (mins)", ascending=False, na_position="last")["Office"].tolist()
                 if not stats_df.empty
@@ -878,7 +1016,7 @@ class CommutePlugin(AppPlugin):
             st.subheader("Downloads")
 
             st.markdown("**Table (employees by methods) - Current Office**")
-            wide = wide_table(df_valid, office_id=office_id, methods=methods)
+            wide = wide_table(df_valid_range, office_id=office_id, methods=methods)
             wide = drop_fully_empty_columns(wide)
 
             st.download_button(
@@ -893,7 +1031,7 @@ class CommutePlugin(AppPlugin):
 
             st.divider()
             st.markdown("**Master**")
-            wide_all = wide_table_all_offices(df_valid, offices=offices, methods=methods)
+            wide_all = wide_table_all_offices(df_valid_range, offices=offices, methods=methods)
             wide_all = drop_fully_empty_columns(wide_all)
 
             st.download_button(
