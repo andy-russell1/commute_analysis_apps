@@ -313,6 +313,11 @@ class CommutePlugin(AppPlugin):
                 return d["travel_time_min"].dropna()
             return d.loc[d["method"].astype(str) == str(method), "travel_time_min"].dropna()
 
+        def _format_method_label(value: str) -> str:
+            if value == BEST_LABEL:
+                return BEST_LABEL
+            return str(value).replace("+", " + ").strip().title()
+
         style_block = """
             <style>
             .source-caption {
@@ -369,7 +374,13 @@ class CommutePlugin(AppPlugin):
                 format_func=lambda oid: office_lookup[oid]["address"],
                 key="office_select",
             )
-            method = st.selectbox("Transport Method", [BEST_LABEL] + methods, index=0, key="method_select")
+            method = st.selectbox(
+                "Transport Method",
+                [BEST_LABEL] + methods,
+                index=0,
+                key="method_select",
+                format_func=_format_method_label,
+            )
 
             tt_series = _method_time_series(df_valid, method, BEST_LABEL)
             range_max = int(math.ceil(tt_series.max())) if not tt_series.empty else 90
@@ -395,7 +406,7 @@ class CommutePlugin(AppPlugin):
         office_obj = office_lookup[office_id]
         param_line = "Office: {0} | Transport Mode: {1} | Time range: {2}-{3} mins".format(
             office_obj["address"],
-            method,
+            _format_method_label(method),
             int(min_time),
             int(max_time),
         )
