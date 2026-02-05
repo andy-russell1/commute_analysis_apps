@@ -82,6 +82,9 @@ def threshold_stacked_bar_figure(
             orientation="h",
             marker=dict(color="#1e8449"),
             customdata=le30_emp,
+            text=dfp["<=30 min"].map(lambda v: f"{v:.0f}%" if v > 0 else ""),
+            textposition="inside",
+            textfont=dict(color="white"),
             hovertemplate="%{y}<br>Employees: %{customdata}<extra></extra>",
         )
     )
@@ -93,6 +96,9 @@ def threshold_stacked_bar_figure(
             orientation="h",
             marker=dict(color="#f1c40f"),
             customdata=b30_45_emp,
+            text=dfp["30-45 min"].map(lambda v: f"{v:.0f}%" if v > 0 else ""),
+            textposition="inside",
+            textfont=dict(color="black"),
             hovertemplate="%{y}<br>Employees: %{customdata}<extra></extra>",
         )
     )
@@ -104,6 +110,9 @@ def threshold_stacked_bar_figure(
             orientation="h",
             marker=dict(color="#e67e22"),
             customdata=b45_60_emp,
+            text=dfp["45-60 min"].map(lambda v: f"{v:.0f}%" if v > 0 else ""),
+            textposition="inside",
+            textfont=dict(color="white"),
             hovertemplate="%{y}<br>Employees: %{customdata}<extra></extra>",
         )
     )
@@ -115,6 +124,9 @@ def threshold_stacked_bar_figure(
             orientation="h",
             marker=dict(color="#c0392b"),
             customdata=gt60_emp,
+            text=dfp[">60 min"].map(lambda v: f"{v:.0f}%" if v > 0 else ""),
+            textposition="inside",
+            textfont=dict(color="white"),
             hovertemplate="%{y}<br>Employees: %{customdata}<extra></extra>",
         )
     )
@@ -565,7 +577,12 @@ class CommutePlugin(AppPlugin):
 
             logo_uri = _logo_data_uri()
             office_obj = office_lookup[office_id]
-            subtitle_text = "Office: {0}<br>Transport Mode: {1}".format(office_obj["address"], method)
+            subtitle_text = "Office: {0}<br>Transport Mode: {1}<br>Time range: {2}-{3} mins".format(
+                office_obj["address"],
+                method,
+                int(min_time),
+                int(max_time),
+            )
             st.markdown('<div class="print-layout">', unsafe_allow_html=True)
             st.markdown('<div class="print-header">', unsafe_allow_html=True)
             st.markdown(
