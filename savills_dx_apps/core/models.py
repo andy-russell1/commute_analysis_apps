@@ -12,6 +12,7 @@ class AppMetadata:
     accepted_upload_types: List[str]
     upload_label: str
     upload_help: str
+    requires_upload: bool = True
 
 
 @dataclass(frozen=True)

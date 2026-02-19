@@ -104,18 +104,37 @@ def _render_step_1() -> None:
         if kc_logo.exists():
             st.image(str(kc_logo), use_container_width=True)
 
-    plugins = get_plugins()
-    cols = st.columns(3)
-    for idx, plugin in enumerate(plugins):
-        col = cols[idx % 3]
-        with col:
-            with st.container():
-                st.subheader(plugin.metadata.name)
-                st.write(plugin.metadata.description)
-                if st.button("Open", key="open_{0}".format(plugin.metadata.id)):
-                    _set_selected_app(plugin.metadata.id)
-                    _set_step(2)
-                    st.rerun()
+    plugins = {plugin.metadata.id: plugin for plugin in get_plugins()}
+    sections = [
+        ("Commuting Trends", ["commute", "isochrone"]),
+        ("Talent Analytics", ["lightcast", "eurostat"]),
+    ]
+    display_name_overrides = {
+        "commute": "Commute Impact Assessment",
+    }
+    button_labels = {
+        "commute": "Upload data",
+        "isochrone": "Upload data",
+        "lightcast": "Upload data",
+        "eurostat": "Run app",
+    }
+
+    for section_title, app_ids in sections:
+        st.markdown("### {0}".format(section_title))
+        cols = st.columns(2)
+        for col, app_id in zip(cols, app_ids):
+            plugin = plugins.get(app_id)
+            if plugin is None:
+                continue
+            with col:
+                with st.container(border=True):
+                    title = display_name_overrides.get(app_id, plugin.metadata.name)
+                    st.subheader(title)
+                    st.write(plugin.metadata.description)
+                    if st.button(button_labels[app_id], key="open_{0}".format(plugin.metadata.id)):
+                        _set_selected_app(plugin.metadata.id)
+                        _set_step(2)
+                        st.rerun()
     _render_restart_button()
 
 
@@ -126,6 +145,36 @@ def _render_step_2(app_id: str) -> None:
     st.title(plugin.metadata.name)
     _render_step_header(2)
     st.write(plugin.metadata.description)
+
+    if not plugin.metadata.requires_upload:
+        if app_state["status"] == "idle":
+            with st.spinner("Preparing app..."):
+                try:
+                    _run_pipeline(
+                        app_id,
+                        UploadPayload(name="", bytes_data=b"", ext=""),
+                    )
+                except Exception as exc:
+                    app_state["status"] = "failed"
+                    app_state["error"] = str(exc)
+                    append_log(app_state, "Error: {0}".format(exc))
+
+        if app_state["status"] == "failed":
+            st.error(app_state.get("error") or "App setup failed.")
+            if st.button("Retry setup"):
+                app_state["status"] = "idle"
+                st.rerun()
+            _render_restart_button()
+            return
+
+        if app_state["status"] == "ready":
+            _set_step(3)
+            st.rerun()
+            return
+
+        st.info("Preparing app...")
+        _render_restart_button()
+        return
 
     uploader_key = "upload_{0}".format(app_id)
 

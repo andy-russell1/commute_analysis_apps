@@ -24,6 +24,19 @@ python -m streamlit run app.py
 - No user data is written to disk.
 - Static assets (if added under `assets/`) are safe to read.
 
+## Eurostat
+
+- A new **Eurostat** app is available from the main app selector.
+- This is a flat/no-upload app: select Eurostat and it opens directly.
+- It loads these bundled read-only assets:
+  - `assets/data/eurostat/europe_talent_distribution.xlsx`
+  - `assets/data/eurostat/boundary_lookup_selected.geojson`
+- The Eurostat view provides:
+  - one tab per workbook sheet,
+  - sheet-level filtering,
+  - table preview and CSV download,
+  - choropleth map view with selectable numeric metric + aggregation.
+
 ## Add a new app
 
 1. Create a new plugin module in `savills_dx_apps/apps/` implementing `metadata`, `validate`, `build`, and `render`.
