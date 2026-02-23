@@ -275,7 +275,6 @@ def office_median_scatter_map(stats_df: pd.DataFrame, offices: list[dict], title
             hover_data={
                 "Office": True,
                 "Median (mins)": ":.1f",
-                "Employee Count": ":.0f",
                 "lat": False,
                 "lon": False,
             },
