@@ -169,6 +169,37 @@ def single_select_filter(
     return df[df[column].astype(str) == selected].copy(), selected
 
 
+def age_filter_with_overview(
+    df: pd.DataFrame,
+    sheet_name: str,
+    key: str,
+) -> tuple[pd.DataFrame, str, str]:
+    if "age_group" not in df.columns:
+        return df, "All", ""
+    options = sorted(df["age_group"].dropna().astype(str).unique().tolist())
+    if not options:
+        return df, "All", ""
+
+    selected = st.selectbox("Age group", ["All"] + options, index=0, key=key)
+    if selected != "All":
+        return df[df["age_group"].astype(str) == selected].copy(), selected, ""
+
+    if "age" not in df.columns:
+        return df, selected, ""
+
+    preferred_age = choose_preferred_age(df)
+    if not preferred_age:
+        return df, selected, ""
+
+    age_series = df["age"].astype(str)
+    overview = df[age_series == preferred_age].copy()
+    if overview.empty:
+        return df, selected, ""
+
+    note = "All ages uses baseline non-overlapping band: {0}".format(preferred_age)
+    return overview, selected, note
+
+
 def map_subset_for_geo_view(gdf: gpd.GeoDataFrame, geo_view: str) -> gpd.GeoDataFrame:
     if geo_view == "Country":
         return gdf[gdf["geo_class"] == "country"].copy()
@@ -335,12 +366,21 @@ class EurostatPlugin(AppPlugin):
 
                 preprocessed = enforce_total_sex(df, sheet_name)
                 filtered = apply_geo_view_filter(preprocessed, geo_view)
+                age_note = ""
 
                 if sheet_name == "granular_sex_age":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
 
                 if sheet_name == "unemployment_by_edu":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
                     edu_col = "education_level" if "education_level" in filtered.columns else "isced11"
                     if edu_col in filtered.columns:
                         edu_options = sorted(filtered[edu_col].dropna().astype(str).unique().tolist())
@@ -354,7 +394,11 @@ class EurostatPlugin(AppPlugin):
                             filtered = filtered[filtered[edu_col].astype(str) == selected_edu].copy()
 
                 if sheet_name == "industry_nuts2":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
                     ind_col = "industry" if "industry" in filtered.columns else "nace_r2"
                     if ind_col in filtered.columns:
                         ind_options = sorted(filtered[ind_col].dropna().astype(str).unique().tolist())
@@ -368,7 +412,11 @@ class EurostatPlugin(AppPlugin):
                             filtered = filtered[filtered[ind_col].astype(str) == selected_ind].copy()
 
                 if sheet_name == "occupation_country":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
                     role_col = "job_role" if "job_role" in filtered.columns else "isco08"
                     if role_col in filtered.columns:
                         role_options = sorted(filtered[role_col].dropna().astype(str).unique().tolist())
@@ -420,6 +468,8 @@ class EurostatPlugin(AppPlugin):
                     c2.metric("Columns", "{0:,}".format(len(filtered.columns)))
                     c3.metric("Unique geo", "{0:,}".format(filtered["geo"].nunique()) if "geo" in filtered.columns else "n/a")
 
+                if age_note:
+                    st.caption(age_note)
                 st.caption("Base rows in sheet: {0:,}".format(len(df)))
                 view_tab, map_tab = st.tabs(["Data", "Map"])
 
