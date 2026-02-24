@@ -4,6 +4,7 @@ import branca.colormap as cm
 import folium
 import geopandas as gpd
 import pandas as pd
+import re
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -138,6 +139,49 @@ def fill_granular_defaults(df: pd.DataFrame) -> pd.DataFrame:
         age_group = local["age_group"].astype("string").str.strip()
         age = local["age"].astype("string").str.strip()
         local["age_group"] = age_group.mask(age_group.eq("") | age_group.isna(), age)
+    return local
+
+
+def _standardize_age_label(value: object) -> str:
+    raw = str(value).strip()
+    if raw == "" or raw.lower() == "nan":
+        return ""
+
+    code = raw.upper().replace(" ", "")
+    code = code.replace("Y_GE", "YGE").replace("Y_LT", "YLT")
+    if code in {"TOTAL", "T", "YTOTAL", "Y_TOTAL"}:
+        return "All ages"
+
+    m_range = re.match(r"^Y?(\d+)[\-_](\d+)$", code)
+    if m_range:
+        return "{0}-{1}".format(m_range.group(1), m_range.group(2))
+
+    m_ge = re.match(r"^YGE(\d+)$", code)
+    if m_ge:
+        return "{0}+".format(m_ge.group(1))
+
+    m_lt = re.match(r"^YLT(\d+)$", code)
+    if m_lt:
+        return "Under {0}".format(m_lt.group(1))
+
+    m_single = re.match(r"^Y(\d+)$", code)
+    if m_single:
+        return m_single.group(1)
+
+    return raw
+
+
+def standardize_age_groups(df: pd.DataFrame) -> pd.DataFrame:
+    local = df.copy()
+    if "age" in local.columns:
+        derived = local["age"].map(_standardize_age_label)
+        if "age_group" in local.columns:
+            existing = local["age_group"].astype("string").str.strip().fillna("")
+            local["age_group"] = existing.mask(existing.eq(""), derived)
+        else:
+            local["age_group"] = derived
+    elif "age_group" in local.columns:
+        local["age_group"] = local["age_group"].map(_standardize_age_label)
     return local
 
 
@@ -325,6 +369,7 @@ class EurostatPlugin(AppPlugin):
 
                 if sheet_name == "granular_sex_age":
                     df = fill_granular_defaults(df)
+                df = standardize_age_groups(df)
 
                 geo_view = "Country" if sheet_name == "occupation_country" else st.radio(
                     "Geography view",
