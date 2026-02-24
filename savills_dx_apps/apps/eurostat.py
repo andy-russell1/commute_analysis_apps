@@ -382,10 +382,12 @@ class EurostatPlugin(AppPlugin):
                             index=0,
                             key="{0}_role_filter".format(sheet_name),
                         )
-                        if selected_role != "All":
-                            filtered = filtered[filtered[role_col].astype(str) == selected_role].copy()
+                        role_series = filtered[role_col].astype(str)
+                        if selected_role == "All":
+                            if "TOTAL" in role_options:
+                                filtered = filtered[role_series != "TOTAL"].copy()
                         else:
-                            st.warning("All roles mixes TOTAL with occupation subgroups and can overstate summed employment.")
+                            filtered = filtered[role_series == selected_role].copy()
 
                 c1, c2, c3 = st.columns(3)
                 if sheet_name == "granular_sex_age":
