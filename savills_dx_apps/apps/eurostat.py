@@ -12,6 +12,21 @@ from core.models import AppArtifacts, AppMetadata, AppPlugin, UploadPayload
 from core.paths import EUROSTAT_BOUNDARY_LOOKUP_PATH, EUROSTAT_WORKBOOK_PATH
 
 
+@st.cache_data(show_spinner=False)
+def load_workbook(path: str) -> dict[str, pd.DataFrame]:
+    xls = pd.ExcelFile(path)
+    return {sheet: pd.read_excel(path, sheet_name=sheet) for sheet in xls.sheet_names}
+
+
+@st.cache_data(show_spinner=False)
+def load_boundaries(path: str) -> gpd.GeoDataFrame:
+    gdf = gpd.read_file(path)
+    gdf["geo"] = gdf["geo"].astype(str).str.strip().str.upper()
+    if gdf.crs is None or str(gdf.crs).lower() != "epsg:4326":
+        gdf = gdf.to_crs("EPSG:4326")
+    return gdf
+
+
 def get_numeric_columns(df: pd.DataFrame) -> list[str]:
     excluded = {"year"}
     return [
@@ -113,6 +128,16 @@ def fill_granular_defaults(df: pd.DataFrame) -> pd.DataFrame:
         age_group = local["age_group"].astype("string").str.strip()
         age = local["age"].astype("string").str.strip()
         local["age_group"] = age_group.mask(age_group.eq("") | age_group.isna(), age)
+    return local
+
+
+def enforce_total_sex(df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
+    if sheet_name == "granular_sex_age" or "sex" not in df.columns:
+        return df
+    local = df.copy()
+    sex = local["sex"].astype(str).str.strip().str.upper()
+    if (sex == "T").any():
+        local = local[sex == "T"].copy()
     return local
 
 
@@ -269,13 +294,9 @@ class EurostatPlugin(AppPlugin):
 
     def build(self, upload: UploadPayload, log) -> AppArtifacts:
         log("Loading Eurostat workbook")
-        xls = pd.ExcelFile(EUROSTAT_WORKBOOK_PATH)
-        sheets = {sheet: pd.read_excel(EUROSTAT_WORKBOOK_PATH, sheet_name=sheet) for sheet in xls.sheet_names}
+        sheets = load_workbook(str(EUROSTAT_WORKBOOK_PATH))
         log("Loading boundary lookup")
-        boundaries = gpd.read_file(EUROSTAT_BOUNDARY_LOOKUP_PATH)
-        boundaries["geo"] = boundaries["geo"].astype(str).str.strip().str.upper()
-        if boundaries.crs is None or str(boundaries.crs).lower() != "epsg:4326":
-            boundaries = boundaries.to_crs("EPSG:4326")
+        boundaries = load_boundaries(str(EUROSTAT_BOUNDARY_LOOKUP_PATH))
         return {"sheets": sheets, "boundaries": boundaries}
 
     def render(self, artifacts: AppArtifacts) -> None:
@@ -302,7 +323,8 @@ class EurostatPlugin(AppPlugin):
                     key="{0}_geo_view".format(sheet_name),
                 )
 
-                filtered = apply_geo_view_filter(df, geo_view)
+                preprocessed = enforce_total_sex(df, sheet_name)
+                filtered = apply_geo_view_filter(preprocessed, geo_view)
 
                 if sheet_name == "granular_sex_age":
                     filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))

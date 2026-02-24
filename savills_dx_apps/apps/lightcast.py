@@ -24,15 +24,15 @@ from core.paths import DATA_DIR
 
 
 POSTING_INTENSITY_COLORS = [
-    "#fff5f7",
-    "#fee0e6",
-    "#fcbfd2",
-    "#f99bbf",
-    "#f768a1",
-    "#dd3497",
-    "#ae017e",
-    "#7a0177",
-    "#49006a",
+    "#ffffff",
+    "#fff5f0",
+    "#fee0d2",
+    "#fcbba1",
+    "#fc9272",
+    "#fb6a4a",
+    "#ef3b2c",
+    "#cb181d",
+    "#99000d",
 ]
 
 
