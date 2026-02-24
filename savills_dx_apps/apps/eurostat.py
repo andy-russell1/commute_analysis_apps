@@ -100,6 +100,16 @@ def canonical_employment_total(df: pd.DataFrame, sheet_name: str) -> tuple[float
     return total, method
 
 
+def filtered_employment_total(df: pd.DataFrame) -> tuple[float | None, str]:
+    if "employment_volume" not in df.columns:
+        return None, "No employment volume metric in current filtered view."
+    values = pd.to_numeric(df["employment_volume"], errors="coerce")
+    values = values[values.notna()]
+    if values.empty:
+        return None, "No non-null employment volume values in current filtered view."
+    return float(values.sum()), "Dynamic: total for current filters."
+
+
 def apply_geo_view_filter(df: pd.DataFrame, geo_view: str) -> pd.DataFrame:
     if "geo" not in df.columns:
         return df
@@ -380,24 +390,24 @@ class EurostatPlugin(AppPlugin):
                 c1, c2, c3 = st.columns(3)
                 if sheet_name == "granular_sex_age":
                     avg_emp_rate = pd.to_numeric(filtered.get("employment_rate"), errors="coerce").mean()
-                    canonical_total, canonical_note = canonical_employment_total(df, sheet_name)
+                    dynamic_total, dynamic_note = filtered_employment_total(filtered)
                     avg_unemp_rate = pd.to_numeric(filtered.get("unemployment_rate"), errors="coerce").mean()
                     c1.metric("Avg Employment Rate", "n/a" if pd.isna(avg_emp_rate) else "{0:.2f}%".format(avg_emp_rate))
                     c2.metric(
                         "Employment Total (thousand persons)",
-                        "n/a" if canonical_total is None else "{0:,.0f}".format(canonical_total),
+                        "n/a" if dynamic_total is None else "{0:,.0f}".format(dynamic_total),
                     )
                     c3.metric("Avg Unemployment Rate", "n/a" if pd.isna(avg_unemp_rate) else "{0:.2f}%".format(avg_unemp_rate))
-                    st.caption(canonical_note)
+                    st.caption(dynamic_note)
                 elif sheet_name in {"industry_nuts2", "occupation_country"}:
-                    canonical_total, canonical_note = canonical_employment_total(df, sheet_name)
+                    dynamic_total, dynamic_note = filtered_employment_total(filtered)
                     c1.metric("Rows", "{0:,}".format(len(filtered)))
                     c2.metric("Unique geo", "{0:,}".format(filtered["geo"].nunique()) if "geo" in filtered.columns else "n/a")
                     c3.metric(
                         "Employment Total (thousand persons)",
-                        "n/a" if canonical_total is None else "{0:,.0f}".format(canonical_total),
+                        "n/a" if dynamic_total is None else "{0:,.0f}".format(dynamic_total),
                     )
-                    st.caption(canonical_note)
+                    st.caption(dynamic_note)
                 elif sheet_name == "unemployment_by_edu":
                     avg_unemp_rate = pd.to_numeric(filtered.get("unemployment_rate"), errors="coerce").mean()
                     c1.metric("Rows", "{0:,}".format(len(filtered)))
