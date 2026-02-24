@@ -4,7 +4,6 @@ import branca.colormap as cm
 import folium
 import geopandas as gpd
 import pandas as pd
-import re
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -140,131 +139,6 @@ def fill_granular_defaults(df: pd.DataFrame) -> pd.DataFrame:
         age = local["age"].astype("string").str.strip()
         local["age_group"] = age_group.mask(age_group.eq("") | age_group.isna(), age)
     return local
-
-
-def _standardize_age_label(value: object) -> str:
-    raw = str(value).strip()
-    if raw == "" or raw.lower() == "nan":
-        return ""
-
-    code = raw.upper().replace(" ", "")
-    code = code.replace("Y_GE", "YGE").replace("Y_LT", "YLT")
-    if code in {"TOTAL", "T", "YTOTAL", "Y_TOTAL"}:
-        return "All ages"
-
-    m_range = re.match(r"^Y?(\d+)[\-_](\d+)$", code)
-    if m_range:
-        return "{0}-{1}".format(m_range.group(1), m_range.group(2))
-
-    m_ge = re.match(r"^YGE(\d+)$", code)
-    if m_ge:
-        return "{0}+".format(m_ge.group(1))
-
-    m_lt = re.match(r"^YLT(\d+)$", code)
-    if m_lt:
-        return "Under {0}".format(m_lt.group(1))
-
-    m_single = re.match(r"^Y(\d+)$", code)
-    if m_single:
-        return m_single.group(1)
-
-    return raw
-
-
-def standardize_age_groups(df: pd.DataFrame) -> pd.DataFrame:
-    local = df.copy()
-    if "age" in local.columns:
-        derived = local["age"].map(_standardize_age_label)
-        local["age_group"] = derived
-    elif "age_group" in local.columns:
-        local["age_group"] = local["age_group"].map(_standardize_age_label)
-    return local
-
-
-def _age_code_to_decade_bins(value: object) -> list[str]:
-    raw = str(value).strip().upper().replace(" ", "")
-    if raw == "" or raw == "NAN":
-        return []
-
-    bins = [
-        (15, 24, "15-24"),
-        (25, 34, "25-34"),
-        (35, 44, "35-44"),
-        (45, 54, "45-54"),
-        (55, 64, "55-64"),
-        (65, 74, "65-74"),
-        (75, 200, "75+"),
-    ]
-
-    if raw in {"TOTAL", "T", "YTOTAL", "Y_TOTAL"}:
-        return ["All ages"]
-
-    m_range = re.match(r"^Y?(\d+)[\-_](\d+)$", raw)
-    if m_range:
-        lo = int(m_range.group(1))
-        hi = int(m_range.group(2))
-        if hi < lo:
-            lo, hi = hi, lo
-        out: list[str] = []
-        for b_lo, b_hi, label in bins:
-            if not (hi < b_lo or lo > b_hi):
-                out.append(label)
-        return out
-
-    m_ge = re.match(r"^Y_GE(\d+)$", raw) or re.match(r"^YGE(\d+)$", raw)
-    if m_ge:
-        lo = int(m_ge.group(1))
-        out = [label for b_lo, _, label in bins if b_lo >= lo]
-        return out if out else ["{0}+".format(lo)]
-
-    m_lt = re.match(r"^Y_LT(\d+)$", raw) or re.match(r"^YLT(\d+)$", raw)
-    if m_lt:
-        hi = int(m_lt.group(1)) - 1
-        out = [label for _, b_hi, label in bins if b_hi <= hi]
-        return out if out else ["Under {0}".format(int(m_lt.group(1)))]
-
-    m_single = re.match(r"^Y(\d+)$", raw)
-    if m_single:
-        age = int(m_single.group(1))
-        for b_lo, b_hi, label in bins:
-            if b_lo <= age <= b_hi:
-                return [label]
-        return ["{0}+".format(age)] if age >= 75 else []
-
-    return []
-
-
-def apply_age_multiselect_filter(
-    df: pd.DataFrame,
-    key_prefix: str,
-) -> tuple[pd.DataFrame, list[str]]:
-    if "age" not in df.columns or df.empty:
-        return df, []
-
-    local = df.copy()
-    local["_age_bins"] = local["age"].map(_age_code_to_decade_bins)
-    exploded = local["_age_bins"].explode().dropna().astype(str)
-    options = [v for v in exploded.unique().tolist() if v]
-    if not options:
-        return local.drop(columns=["_age_bins"]), []
-
-    order = ["All ages", "Under 15", "15-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"]
-    rank = {label: i for i, label in enumerate(order)}
-    options = sorted(options, key=lambda x: (rank.get(x, 999), x))
-
-    selected = st.multiselect(
-        "Age group (10-year bands)",
-        options=options,
-        default=options,
-        key="{0}_age_bands_filter".format(key_prefix),
-    )
-    if not selected:
-        return local.iloc[0:0].copy().drop(columns=["_age_bins"]), []
-
-    selected_set = set(selected)
-    keep = local["_age_bins"].apply(lambda vals: any(v in selected_set for v in vals))
-    filtered = local[keep].copy()
-    return filtered.drop(columns=["_age_bins"]), selected
 
 
 def enforce_total_sex(df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
@@ -451,7 +325,6 @@ class EurostatPlugin(AppPlugin):
 
                 if sheet_name == "granular_sex_age":
                     df = fill_granular_defaults(df)
-                df = standardize_age_groups(df)
 
                 geo_view = "Country" if sheet_name == "occupation_country" else st.radio(
                     "Geography view",
@@ -464,10 +337,10 @@ class EurostatPlugin(AppPlugin):
                 filtered = apply_geo_view_filter(preprocessed, geo_view)
 
                 if sheet_name == "granular_sex_age":
-                    filtered, _ = apply_age_multiselect_filter(filtered, sheet_name)
+                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
 
                 if sheet_name == "unemployment_by_edu":
-                    filtered, _ = apply_age_multiselect_filter(filtered, sheet_name)
+                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
                     edu_col = "education_level" if "education_level" in filtered.columns else "isced11"
                     if edu_col in filtered.columns:
                         edu_options = sorted(filtered[edu_col].dropna().astype(str).unique().tolist())
@@ -481,7 +354,7 @@ class EurostatPlugin(AppPlugin):
                             filtered = filtered[filtered[edu_col].astype(str) == selected_edu].copy()
 
                 if sheet_name == "industry_nuts2":
-                    filtered, _ = apply_age_multiselect_filter(filtered, sheet_name)
+                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
                     ind_col = "industry" if "industry" in filtered.columns else "nace_r2"
                     if ind_col in filtered.columns:
                         ind_options = sorted(filtered[ind_col].dropna().astype(str).unique().tolist())
@@ -495,7 +368,7 @@ class EurostatPlugin(AppPlugin):
                             filtered = filtered[filtered[ind_col].astype(str) == selected_ind].copy()
 
                 if sheet_name == "occupation_country":
-                    filtered, _ = apply_age_multiselect_filter(filtered, sheet_name)
+                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
                     role_col = "job_role" if "job_role" in filtered.columns else "isco08"
                     if role_col in filtered.columns:
                         role_options = sorted(filtered[role_col].dropna().astype(str).unique().tolist())
