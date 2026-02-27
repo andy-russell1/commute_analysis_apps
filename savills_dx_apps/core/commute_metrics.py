@@ -90,6 +90,8 @@ def office_stats(
         rows.append(
             {
                 "officeID": oid,
+                "Office ID": oid,
+                "Office Full": full,
                 "Office": short,
                 "Employee Count": n,
                 "Median (mins)": float(np.quantile(vals, 0.5)) if n else np.nan,

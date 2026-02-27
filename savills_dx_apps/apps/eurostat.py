@@ -12,6 +12,21 @@ from core.models import AppArtifacts, AppMetadata, AppPlugin, UploadPayload
 from core.paths import EUROSTAT_BOUNDARY_LOOKUP_PATH, EUROSTAT_WORKBOOK_PATH
 
 
+@st.cache_data(show_spinner=False)
+def load_workbook(path: str) -> dict[str, pd.DataFrame]:
+    xls = pd.ExcelFile(path)
+    return {sheet: pd.read_excel(path, sheet_name=sheet) for sheet in xls.sheet_names}
+
+
+@st.cache_data(show_spinner=False)
+def load_boundaries(path: str) -> gpd.GeoDataFrame:
+    gdf = gpd.read_file(path)
+    gdf["geo"] = gdf["geo"].astype(str).str.strip().str.upper()
+    if gdf.crs is None or str(gdf.crs).lower() != "epsg:4326":
+        gdf = gdf.to_crs("EPSG:4326")
+    return gdf
+
+
 def get_numeric_columns(df: pd.DataFrame) -> list[str]:
     excluded = {"year"}
     return [
@@ -85,6 +100,16 @@ def canonical_employment_total(df: pd.DataFrame, sheet_name: str) -> tuple[float
     return total, method
 
 
+def filtered_employment_total(df: pd.DataFrame) -> tuple[float | None, str]:
+    if "employment_volume" not in df.columns:
+        return None, "No employment volume metric in current filtered view."
+    values = pd.to_numeric(df["employment_volume"], errors="coerce")
+    values = values[values.notna()]
+    if values.empty:
+        return None, "No non-null employment volume values in current filtered view."
+    return float(values.sum()), "Dynamic: total for current filters."
+
+
 def apply_geo_view_filter(df: pd.DataFrame, geo_view: str) -> pd.DataFrame:
     if "geo" not in df.columns:
         return df
@@ -116,6 +141,16 @@ def fill_granular_defaults(df: pd.DataFrame) -> pd.DataFrame:
     return local
 
 
+def enforce_total_sex(df: pd.DataFrame, sheet_name: str) -> pd.DataFrame:
+    if sheet_name == "granular_sex_age" or "sex" not in df.columns:
+        return df
+    local = df.copy()
+    sex = local["sex"].astype(str).str.strip().str.upper()
+    if (sex == "T").any():
+        local = local[sex == "T"].copy()
+    return local
+
+
 def single_select_filter(
     df: pd.DataFrame,
     column: str,
@@ -132,6 +167,37 @@ def single_select_filter(
     if selected == all_label:
         return df, selected
     return df[df[column].astype(str) == selected].copy(), selected
+
+
+def age_filter_with_overview(
+    df: pd.DataFrame,
+    sheet_name: str,
+    key: str,
+) -> tuple[pd.DataFrame, str, str]:
+    if "age_group" not in df.columns:
+        return df, "All", ""
+    options = sorted(df["age_group"].dropna().astype(str).unique().tolist())
+    if not options:
+        return df, "All", ""
+
+    selected = st.selectbox("Age group", ["All"] + options, index=0, key=key)
+    if selected != "All":
+        return df[df["age_group"].astype(str) == selected].copy(), selected, ""
+
+    if "age" not in df.columns:
+        return df, selected, ""
+
+    preferred_age = choose_preferred_age(df)
+    if not preferred_age:
+        return df, selected, ""
+
+    age_series = df["age"].astype(str)
+    overview = df[age_series == preferred_age].copy()
+    if overview.empty:
+        return df, selected, ""
+
+    note = "All ages uses baseline non-overlapping band: {0}".format(preferred_age)
+    return overview, selected, note
 
 
 def map_subset_for_geo_view(gdf: gpd.GeoDataFrame, geo_view: str) -> gpd.GeoDataFrame:
@@ -269,13 +335,9 @@ class EurostatPlugin(AppPlugin):
 
     def build(self, upload: UploadPayload, log) -> AppArtifacts:
         log("Loading Eurostat workbook")
-        xls = pd.ExcelFile(EUROSTAT_WORKBOOK_PATH)
-        sheets = {sheet: pd.read_excel(EUROSTAT_WORKBOOK_PATH, sheet_name=sheet) for sheet in xls.sheet_names}
+        sheets = load_workbook(str(EUROSTAT_WORKBOOK_PATH))
         log("Loading boundary lookup")
-        boundaries = gpd.read_file(EUROSTAT_BOUNDARY_LOOKUP_PATH)
-        boundaries["geo"] = boundaries["geo"].astype(str).str.strip().str.upper()
-        if boundaries.crs is None or str(boundaries.crs).lower() != "epsg:4326":
-            boundaries = boundaries.to_crs("EPSG:4326")
+        boundaries = load_boundaries(str(EUROSTAT_BOUNDARY_LOOKUP_PATH))
         return {"sheets": sheets, "boundaries": boundaries}
 
     def render(self, artifacts: AppArtifacts) -> None:
@@ -302,13 +364,23 @@ class EurostatPlugin(AppPlugin):
                     key="{0}_geo_view".format(sheet_name),
                 )
 
-                filtered = apply_geo_view_filter(df, geo_view)
+                preprocessed = enforce_total_sex(df, sheet_name)
+                filtered = apply_geo_view_filter(preprocessed, geo_view)
+                age_note = ""
 
                 if sheet_name == "granular_sex_age":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
 
                 if sheet_name == "unemployment_by_edu":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
                     edu_col = "education_level" if "education_level" in filtered.columns else "isced11"
                     if edu_col in filtered.columns:
                         edu_options = sorted(filtered[edu_col].dropna().astype(str).unique().tolist())
@@ -322,7 +394,11 @@ class EurostatPlugin(AppPlugin):
                             filtered = filtered[filtered[edu_col].astype(str) == selected_edu].copy()
 
                 if sheet_name == "industry_nuts2":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
                     ind_col = "industry" if "industry" in filtered.columns else "nace_r2"
                     if ind_col in filtered.columns:
                         ind_options = sorted(filtered[ind_col].dropna().astype(str).unique().tolist())
@@ -336,7 +412,11 @@ class EurostatPlugin(AppPlugin):
                             filtered = filtered[filtered[ind_col].astype(str) == selected_ind].copy()
 
                 if sheet_name == "occupation_country":
-                    filtered, _ = single_select_filter(filtered, "age_group", "Age group", key="{0}_age_group_filter".format(sheet_name))
+                    filtered, _, age_note = age_filter_with_overview(
+                        filtered,
+                        sheet_name,
+                        key="{0}_age_group_filter".format(sheet_name),
+                    )
                     role_col = "job_role" if "job_role" in filtered.columns else "isco08"
                     if role_col in filtered.columns:
                         role_options = sorted(filtered[role_col].dropna().astype(str).unique().tolist())
@@ -350,32 +430,34 @@ class EurostatPlugin(AppPlugin):
                             index=0,
                             key="{0}_role_filter".format(sheet_name),
                         )
-                        if selected_role != "All":
-                            filtered = filtered[filtered[role_col].astype(str) == selected_role].copy()
+                        role_series = filtered[role_col].astype(str)
+                        if selected_role == "All":
+                            if "TOTAL" in role_options:
+                                filtered = filtered[role_series != "TOTAL"].copy()
                         else:
-                            st.warning("All roles mixes TOTAL with occupation subgroups and can overstate summed employment.")
+                            filtered = filtered[role_series == selected_role].copy()
 
                 c1, c2, c3 = st.columns(3)
                 if sheet_name == "granular_sex_age":
                     avg_emp_rate = pd.to_numeric(filtered.get("employment_rate"), errors="coerce").mean()
-                    canonical_total, canonical_note = canonical_employment_total(df, sheet_name)
+                    dynamic_total, dynamic_note = filtered_employment_total(filtered)
                     avg_unemp_rate = pd.to_numeric(filtered.get("unemployment_rate"), errors="coerce").mean()
                     c1.metric("Avg Employment Rate", "n/a" if pd.isna(avg_emp_rate) else "{0:.2f}%".format(avg_emp_rate))
                     c2.metric(
                         "Employment Total (thousand persons)",
-                        "n/a" if canonical_total is None else "{0:,.0f}".format(canonical_total),
+                        "n/a" if dynamic_total is None else "{0:,.0f}".format(dynamic_total),
                     )
                     c3.metric("Avg Unemployment Rate", "n/a" if pd.isna(avg_unemp_rate) else "{0:.2f}%".format(avg_unemp_rate))
-                    st.caption(canonical_note)
+                    st.caption(dynamic_note)
                 elif sheet_name in {"industry_nuts2", "occupation_country"}:
-                    canonical_total, canonical_note = canonical_employment_total(df, sheet_name)
+                    dynamic_total, dynamic_note = filtered_employment_total(filtered)
                     c1.metric("Rows", "{0:,}".format(len(filtered)))
                     c2.metric("Unique geo", "{0:,}".format(filtered["geo"].nunique()) if "geo" in filtered.columns else "n/a")
                     c3.metric(
                         "Employment Total (thousand persons)",
-                        "n/a" if canonical_total is None else "{0:,.0f}".format(canonical_total),
+                        "n/a" if dynamic_total is None else "{0:,.0f}".format(dynamic_total),
                     )
-                    st.caption(canonical_note)
+                    st.caption(dynamic_note)
                 elif sheet_name == "unemployment_by_edu":
                     avg_unemp_rate = pd.to_numeric(filtered.get("unemployment_rate"), errors="coerce").mean()
                     c1.metric("Rows", "{0:,}".format(len(filtered)))
@@ -386,6 +468,8 @@ class EurostatPlugin(AppPlugin):
                     c2.metric("Columns", "{0:,}".format(len(filtered.columns)))
                     c3.metric("Unique geo", "{0:,}".format(filtered["geo"].nunique()) if "geo" in filtered.columns else "n/a")
 
+                if age_note:
+                    st.caption(age_note)
                 st.caption("Base rows in sheet: {0:,}".format(len(df)))
                 view_tab, map_tab = st.tabs(["Data", "Map"])
 

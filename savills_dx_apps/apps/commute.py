@@ -22,6 +22,11 @@ from core.paths import LOGO_DIR
 
 
 BEST_LABEL = "Best"
+COMMUTE_COLOR_SCALE = [
+    [0.0, "#1e8449"],  # low travel time
+    [0.5, "#f1c40f"],  # midpoint = yellow/amber
+    [1.0, "#c0392b"],  # high travel time
+]
 
 
 def drop_fully_empty_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -197,7 +202,7 @@ def employee_scatter_map(df_emp: pd.DataFrame, office_obj: dict, title: str):
         zoom=9,
         height=720,
         title=title,
-        color_continuous_scale="RdYlGn_r",
+        color_continuous_scale=COMMUTE_COLOR_SCALE,
     )
 
     fig.update_coloraxes(
@@ -223,6 +228,91 @@ def employee_scatter_map(df_emp: pd.DataFrame, office_obj: dict, title: str):
         hoverinfo="text",
     )
 
+    fig.update_layout(
+        mapbox_style="carto-positron",
+        margin=dict(l=0, r=0, t=50, b=0),
+        legend=dict(orientation="h", yanchor="bottom", y=0.01, xanchor="left", x=0.01),
+        dragmode="zoom",
+    )
+    return fig
+
+
+def office_median_scatter_map(stats_df: pd.DataFrame, offices: list[dict], title: str):
+    if stats_df is None or stats_df.empty:
+        return None
+
+    office_points = pd.DataFrame(offices).copy()
+    if office_points.empty:
+        return None
+
+    office_points = office_points.rename(
+        columns={
+            "officeID": "Office ID",
+            "address": "Office Full",
+        }
+    )
+    office_points["Office"] = office_points["Office Full"].astype(str).str.split(",").str[0].str.strip()
+    office_points["lat"] = pd.to_numeric(office_points.get("lat"), errors="coerce")
+    office_points["lon"] = pd.to_numeric(office_points.get("lon"), errors="coerce")
+
+    stats_cols = ["Office ID", "Median (mins)", "Employee Count"]
+    stats_points = stats_df[[c for c in stats_cols if c in stats_df.columns]].copy()
+    points = office_points.merge(stats_points, on="Office ID", how="left")
+    points["Median (mins)"] = pd.to_numeric(points.get("Median (mins)"), errors="coerce")
+    points["Employee Count"] = pd.to_numeric(points.get("Employee Count"), errors="coerce")
+    points = points.dropna(subset=["lat", "lon"]).copy()
+    if points.empty:
+        return None
+
+    with_data = points.dropna(subset=["Median (mins)"]).copy()
+    fig = None
+    if not with_data.empty:
+        fig = px.scatter_mapbox(
+            with_data,
+            lat="lat",
+            lon="lon",
+            color="Median (mins)",
+            hover_data={
+                "Office": True,
+                "Median (mins)": ":.1f",
+                "lat": False,
+                "lon": False,
+            },
+            zoom=9,
+            height=720,
+            title=title,
+            color_continuous_scale=COMMUTE_COLOR_SCALE,
+        )
+        fig.update_traces(marker=dict(size=20, opacity=0.8), hoverlabel=dict(font=dict(size=16)))
+    else:
+        fig = go.Figure()
+        fig.update_layout(title=title, height=720)
+
+    without_data = points[points["Median (mins)"].isna()].copy()
+    if not without_data.empty:
+        fig.add_scattermapbox(
+            lat=without_data["lat"],
+            lon=without_data["lon"],
+            mode="markers",
+            marker=dict(size=20, color="#9ca3af", opacity=0.8),
+            name="No median available",
+            text=without_data["Office"],
+            hovertemplate="Office: %{text}<br>Median (mins): N/A<extra></extra>",
+            hoverlabel=dict(font=dict(size=16)),
+        )
+
+    fig.update_coloraxes(
+        colorbar=dict(
+            title="Median (mins)",
+            orientation="h",
+            x=0.5,
+            xanchor="center",
+            y=-0.15,
+            yanchor="top",
+            len=0.6,
+            thickness=12,
+        ),
+    )
     fig.update_layout(
         mapbox_style="carto-positron",
         margin=dict(l=0, r=0, t=50, b=0),
@@ -479,15 +569,37 @@ class CommutePlugin(AppPlugin):
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="print-map">', unsafe_allow_html=True)
-            fig_map = employee_scatter_map(
-                emp_tbl,
-                office_obj,
-                title="Employees - {0} - {1}".format(office_obj["address"], method),
+            if "explore_map_toggle_offices" not in st.session_state:
+                st.session_state["explore_map_toggle_offices"] = False
+            toggle_label = (
+                "Switch from Office to Employee View"
+                if st.session_state["explore_map_toggle_offices"]
+                else "Switch from Employee to Office View"
             )
-            if fig_map is None:
-                st.info("No mappable employee points (missing lat/lon).")
+            show_office_map = st.toggle(
+                toggle_label,
+                key="explore_map_toggle_offices",
+            )
+            if show_office_map:
+                fig_map = office_median_scatter_map(
+                    stats_df=stats_df,
+                    offices=offices,
+                    title="Office median commute times - {0}".format(_format_method_label(method)),
+                )
+                if fig_map is None:
+                    st.info("No mappable office points available.")
+                else:
+                    st.plotly_chart(fig_map, use_container_width=True, config={"scrollZoom": True})
             else:
-                st.plotly_chart(fig_map, use_container_width=True, config={"scrollZoom": True})
+                fig_map = employee_scatter_map(
+                    emp_tbl,
+                    office_obj,
+                    title="Employees - {0} - {1}".format(office_obj["address"], method),
+                )
+                if fig_map is None:
+                    st.info("No mappable employee points (missing lat/lon).")
+                else:
+                    st.plotly_chart(fig_map, use_container_width=True, config={"scrollZoom": True})
             st.markdown("</div>", unsafe_allow_html=True)
 
             with st.expander("Employee-level table", expanded=False):
