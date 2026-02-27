@@ -409,6 +409,17 @@ def _hex_to_rgba(color: str, alpha: float) -> str:
     return "rgba({0},{1},{2},{3})".format(r, g, b, alpha)
 
 
+def _darken_hex(color: str, factor: float = 0.82) -> str:
+    value = str(color).lstrip("#")
+    if len(value) != 6:
+        return color
+    factor = max(0.0, min(1.0, float(factor)))
+    r = int(int(value[0:2], 16) * factor)
+    g = int(int(value[2:4], 16) * factor)
+    b = int(int(value[4:6], 16) * factor)
+    return "#{0:02x}{1:02x}{2:02x}".format(r, g, b)
+
+
 def _iter_polygons(geometry) -> list:
     if geometry is None or geometry.is_empty:
         return []
@@ -476,7 +487,9 @@ def _build_map(
         workers_map["_band_key"] = workers_proj["_band_key"].values
 
     workers_map["_point_color"] = workers_map["_band_key"].apply(
-        lambda val: color_map.get(float(val), "#4b5563") if pd.notna(val) else "#4b5563"
+        lambda val: _darken_hex(color_map.get(float(val), "#4b5563"))
+        if pd.notna(val)
+        else "#4b5563"
     )
 
     fig = go.Figure()
