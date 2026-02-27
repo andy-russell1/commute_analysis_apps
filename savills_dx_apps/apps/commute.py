@@ -352,6 +352,16 @@ class CommutePlugin(AppPlugin):
         st.markdown(style_block, unsafe_allow_html=True)
         office_lookup = {o["officeID"]: o for o in offices}
         office_ids = [o["officeID"] for o in offices]
+        baseline_office_id = "1" if "1" in office_ids else office_ids[0]
+
+        def _baseline_median(stats_df: pd.DataFrame) -> float | None:
+            baseline_row = stats_df[stats_df["officeID"].astype(str) == str(baseline_office_id)]
+            if baseline_row.empty:
+                return None
+            baseline_values = pd.to_numeric(baseline_row["Median (mins)"], errors="coerce").dropna()
+            if baseline_values.empty:
+                return None
+            return float(baseline_values.iloc[0])
 
         header_cols = st.columns([5, 2])
         with header_cols[0]:
@@ -451,18 +461,21 @@ class CommutePlugin(AppPlugin):
                 best_office = stats_df[stats_df["Median (mins)"] == best_median]["Office"].values[0]
                 sample_size = len(emp_tbl)
                 avg_median = stats_df["Median (mins)"].mean()
+                baseline_median = _baseline_median(stats_df)
 
                 col1.metric("Best Performing Office", "{0}".format(best_office))
                 col2.metric("Sample Size", "{0:,}".format(int(sample_size)))
                 col3.metric("Average Median Time", "{0:.1f} min".format(avg_median))
 
-                current_office_short = office_lookup[office_id]["address"].split(",")[0].strip()
-                current_median = stats_df[stats_df["Office"] == current_office_short]["Median (mins)"].values
-                if len(current_median) > 0:
-                    delta_value = current_median[0] - best_median
-                    col4.metric("Average time vs best performing office", "{0:+.1f} min".format(delta_value))
+                current_median = stats_df[stats_df["officeID"].astype(str) == str(office_id)]["Median (mins)"].values
+                if len(current_median) > 0 and baseline_median is not None:
+                    delta_value = current_median[0] - baseline_median
+                    col4.metric(
+                        "Average time vs baseline office (ID 1)",
+                        "{0:+.1f} min".format(delta_value),
+                    )
                 else:
-                    col4.metric("Average time vs best performing office", "N/A")
+                    col4.metric("Average time vs baseline office (ID 1)", "N/A")
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="print-map">', unsafe_allow_html=True)
@@ -514,18 +527,21 @@ class CommutePlugin(AppPlugin):
                 best_median = stats_df["Median (mins)"].min()
                 best_office = stats_df[stats_df["Median (mins)"] == best_median]["Office"].values[0]
                 avg_median = stats_df["Median (mins)"].mean()
+                baseline_median = _baseline_median(stats_df)
 
                 col1.metric("Best Performing Office", "{0}".format(best_office))
                 col2.metric("Sample Size", "{0:,}".format(int(sample_size)))
                 col3.metric("Average Median Time", "{0:.1f} min".format(avg_median))
 
-                current_office_short = office_lookup[office_id]["address"].split(",")[0].strip()
-                current_median = stats_df[stats_df["Office"] == current_office_short]["Median (mins)"].values
-                if len(current_median) > 0:
-                    delta_value = current_median[0] - best_median
-                    col4.metric("Average time vs best performing office", "{0:+.1f} min".format(delta_value))
+                current_median = stats_df[stats_df["officeID"].astype(str) == str(office_id)]["Median (mins)"].values
+                if len(current_median) > 0 and baseline_median is not None:
+                    delta_value = current_median[0] - baseline_median
+                    col4.metric(
+                        "Average time vs baseline office (ID 1)",
+                        "{0:+.1f} min".format(delta_value),
+                    )
                 else:
-                    col4.metric("Average time vs best performing office", "N/A")
+                    col4.metric("Average time vs baseline office (ID 1)", "N/A")
 
             st.divider()
 

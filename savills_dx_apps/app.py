@@ -58,7 +58,7 @@ def _render_sidebar() -> None:
     with st.sidebar:
         logo_path = LOGO_DIR / "Savills.png"
         if logo_path.exists():
-            st.image(str(logo_path), use_container_width=True)
+            st.image(str(logo_path), use_column_width=True)
 
 
 def _render_restart_button() -> None:
@@ -102,39 +102,43 @@ def _render_step_1() -> None:
     with header_cols[1]:
         kc_logo = LOGO_DIR / "Knowledge Cubed.png"
         if kc_logo.exists():
-            st.image(str(kc_logo), use_container_width=True)
+            st.image(str(kc_logo), use_column_width=True)
 
     plugins = {plugin.metadata.id: plugin for plugin in get_plugins()}
     sections = [
-        ("Commuting Trends", ["commute", "isochrone"]),
+        ("Commuting Trends", ["commute", "isochrone", "isochrone_commute"]),
         ("Talent Analytics", ["lightcast", "eurostat"]),
     ]
     display_name_overrides = {
         "commute": "Commute Impact Assessment",
+        "isochrone_commute": "Isochrone + Commute Impact Assessment",
     }
     button_labels = {
         "commute": "Upload data",
         "isochrone": "Upload data",
+        "isochrone_commute": "Upload data",
         "lightcast": "Upload data",
         "eurostat": "Run app",
     }
 
     for section_title, app_ids in sections:
         st.markdown("### {0}".format(section_title))
-        cols = st.columns(2)
-        for col, app_id in zip(cols, app_ids):
-            plugin = plugins.get(app_id)
-            if plugin is None:
-                continue
-            with col:
-                with st.container(border=True):
-                    title = display_name_overrides.get(app_id, plugin.metadata.name)
-                    st.subheader(title)
-                    st.write(plugin.metadata.description)
-                    if st.button(button_labels[app_id], key="open_{0}".format(plugin.metadata.id)):
-                        _set_selected_app(plugin.metadata.id)
-                        _set_step(2)
-                        st.rerun()
+        for i in range(0, len(app_ids), 2):
+            row_ids = app_ids[i : i + 2]
+            cols = st.columns(2)
+            for col_idx, app_id in enumerate(row_ids):
+                plugin = plugins.get(app_id)
+                if plugin is None:
+                    continue
+                with cols[col_idx]:
+                    with st.container(border=True):
+                        title = display_name_overrides.get(app_id, plugin.metadata.name)
+                        st.subheader(title)
+                        st.write(plugin.metadata.description)
+                        if st.button(button_labels[app_id], key="open_{0}".format(plugin.metadata.id)):
+                            _set_selected_app(plugin.metadata.id)
+                            _set_step(2)
+                            st.rerun()
     _render_restart_button()
 
 
@@ -251,6 +255,37 @@ def _render_step_2(app_id: str) -> None:
                 ext = "zip"
                 upload_name = "lightcast_uploads.zip"
                 st.caption("Files queued: {0}".format(len(data_files)))
+    elif app_id == "isochrone_commute":
+        isochrone_upload = st.file_uploader(
+            "Upload isochrone ZIP",
+            type=["zip"],
+            help="ZIP should contain .shp, .dbf, and .shx files.",
+            key="{0}_iso".format(uploader_key),
+        )
+        employee_upload = st.file_uploader(
+            "Upload employee data (Successful.csv or geocoded CSV/XLS/XLSX)",
+            type=["csv", "xls", "xlsx"],
+            help="Employee file must include geocoded latitude/longitude fields.",
+            key="{0}_emp".format(uploader_key),
+        )
+
+        if isochrone_upload is None or employee_upload is None:
+            st.info("Upload both files to continue.")
+            _render_restart_button()
+            return
+
+        isochrone_name = isochrone_upload.name
+        employee_name = employee_upload.name
+        file_map = OrderedDict(
+            [
+                ("isochrones__{0}".format(isochrone_name), isochrone_upload.getvalue()),
+                ("employees__{0}".format(employee_name), employee_upload.getvalue()),
+            ]
+        )
+        bytes_data = zip_bytes(file_map)
+        ext = "zip"
+        upload_name = "isochrone_commute_inputs.zip"
+        st.caption("Isochrone: {0} | Employee data: {1}".format(isochrone_name, employee_name))
     else:
         uploaded = st.file_uploader(
             plugin.metadata.upload_label,
