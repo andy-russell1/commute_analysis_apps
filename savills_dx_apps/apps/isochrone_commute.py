@@ -6,7 +6,6 @@ from typing import Optional
 
 import geopandas as gpd
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -438,68 +437,66 @@ def _build_map(
     if iso.crs is None or str(iso.crs).lower() != "epsg:4326":
         iso = iso.to_crs("EPSG:4326")
     iso["_minutes"] = _minutes_from_iso(iso, time_col)
+    iso = iso[pd.to_numeric(iso["_minutes"], errors="coerce").notna()].copy()
+    iso["_band_key"] = pd.to_numeric(iso["_minutes"], errors="coerce").round(6)
 
     workers_map = workers.copy()
     workers_map["lat"] = pd.to_numeric(workers_map["lat"], errors="coerce")
     workers_map["lon"] = pd.to_numeric(workers_map["lon"], errors="coerce")
     workers_map = workers_map.dropna(subset=["lat", "lon"]).copy()
 
-    has_travel_time = (
-        "travel_time_min" in workers_map.columns
-        and pd.to_numeric(workers_map["travel_time_min"], errors="coerce").notna().any()
-    )
-
-    if has_travel_time:
-        workers_map["travel_time_min"] = pd.to_numeric(workers_map["travel_time_min"], errors="coerce")
-        fig = px.scatter_mapbox(
-            workers_map,
-            lat="lat",
-            lon="lon",
-            color="travel_time_min",
-            zoom=10,
-            height=860,
-            color_continuous_scale="RdYlGn_r",
-        )
-        if fig.data:
-            fig.data[0].hoverinfo = "skip"
-            fig.data[0].hovertemplate = None
-        fig.update_coloraxes(
-            colorbar=dict(
-                title="Time (mins)",
-                orientation="h",
-                x=0.5,
-                xanchor="center",
-                y=-0.15,
-                yanchor="top",
-                len=0.6,
-                thickness=12,
-            ),
-        )
-    else:
-        fig = go.Figure()
-        if not workers_map.empty:
-            fig.add_trace(
-                go.Scattermapbox(
-                    lat=workers_map["lat"],
-                    lon=workers_map["lon"],
-                    mode="markers",
-                    marker=dict(size=6, color="#2c3e50", opacity=0.75),
-                    name="Workers",
-                    hoverinfo="skip",
-                    hovertemplate=None,
-                )
-            )
-
-    band_minutes = (
-        pd.to_numeric(iso["_minutes"], errors="coerce")
+    band_keys = (
+        pd.to_numeric(iso["_band_key"], errors="coerce")
         .dropna()
-        .sort_values(ascending=False)
+        .sort_values(ascending=True)
         .unique()
         .tolist()
     )
-    for i, band in enumerate(band_minutes):
-        color = ISOCHRONE_COLORS[i % len(ISOCHRONE_COLORS)]
-        band_iso = iso[pd.to_numeric(iso["_minutes"], errors="coerce") == float(band)]
+    color_map = {
+        float(band): ISOCHRONE_COLORS[i % len(ISOCHRONE_COLORS)] for i, band in enumerate(band_keys)
+    }
+
+    # Assign each worker to the smallest (fastest) band they fall within.
+    workers_map["_band_key"] = pd.NA
+    if not workers_map.empty and band_keys:
+        iso_proj = iso.to_crs("EPSG:27700").copy()
+        workers_proj = workers_map.to_crs("EPSG:27700").copy()
+        workers_proj["_band_key"] = pd.NA
+
+        for band in band_keys:
+            band_iso = iso_proj[pd.to_numeric(iso_proj["_band_key"], errors="coerce") == float(band)]
+            if band_iso.empty:
+                continue
+            union_geom = band_iso.geometry.unary_union
+            if union_geom is None or union_geom.is_empty:
+                continue
+            mask = workers_proj["_band_key"].isna() & workers_proj.geometry.intersects(union_geom)
+            workers_proj.loc[mask, "_band_key"] = float(band)
+
+        workers_map["_band_key"] = workers_proj["_band_key"].values
+
+    workers_map["_point_color"] = workers_map["_band_key"].apply(
+        lambda val: color_map.get(float(val), "#4b5563") if pd.notna(val) else "#4b5563"
+    )
+
+    fig = go.Figure()
+    if not workers_map.empty:
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=workers_map["lat"],
+                lon=workers_map["lon"],
+                mode="markers",
+                marker=dict(size=6, color=workers_map["_point_color"].tolist(), opacity=0.78),
+                name="Workers",
+                hoverinfo="skip",
+                hovertemplate=None,
+            )
+        )
+
+    # Draw larger bands first so smaller/faster bands remain visible above.
+    for band in sorted(band_keys, reverse=True):
+        color = color_map.get(float(band), ISOCHRONE_COLORS[0])
+        band_iso = iso[pd.to_numeric(iso["_band_key"], errors="coerce") == float(band)]
         union_geom = band_iso.geometry.unary_union
         polygons = _iter_polygons(union_geom)
         for j, poly in enumerate(polygons):
