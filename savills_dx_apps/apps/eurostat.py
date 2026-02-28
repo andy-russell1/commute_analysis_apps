@@ -121,6 +121,77 @@ def apply_geo_view_filter(df: pd.DataFrame, geo_view: str) -> pd.DataFrame:
     return local[buckets == "region"].copy()
 
 
+def geo_code_length(value: object) -> int:
+    code = str(value).strip().upper()
+    return len(code)
+
+
+def region_level_to_nuts_level(region_code_len: int | None) -> int | None:
+    mapping = {3: 1, 4: 2, 5: 3}
+    return mapping.get(region_code_len)
+
+
+def region_level_options(df: pd.DataFrame) -> list[int]:
+    if "geo" not in df.columns:
+        return []
+    local = df.copy()
+    local["geo"] = local["geo"].astype(str).str.strip().str.upper()
+    local = local[local["geo"].map(geo_bucket) == "region"].copy()
+    if local.empty:
+        return []
+    lengths = sorted(local["geo"].map(geo_code_length).dropna().astype(int).unique().tolist())
+    return [length for length in lengths if length in {3, 4, 5}]
+
+
+def apply_region_level_filter(df: pd.DataFrame, region_code_len: int | None) -> pd.DataFrame:
+    if region_code_len is None or "geo" not in df.columns:
+        return df
+    local = df.copy()
+    local["geo"] = local["geo"].astype(str).str.strip().str.upper()
+    return local[local["geo"].map(geo_code_length) == int(region_code_len)].copy()
+
+
+def region_level_label(region_code_len: int | None) -> str:
+    nuts_level = region_level_to_nuts_level(region_code_len)
+    if nuts_level is not None:
+        return "NUTS{0} Regions".format(nuts_level)
+    return "Unknown"
+
+
+def region_code_len_from_label(geography_label: str) -> int | None:
+    mapping = {
+        "NUTS1 Regions": 3,
+        "NUTS2 Regions": 4,
+        "NUTS3 Regions": 5,
+    }
+    return mapping.get(geography_label)
+
+
+def geography_level_options(df: pd.DataFrame) -> list[str]:
+    if "geo" not in df.columns:
+        return ["Country"]
+    local = df.copy()
+    local["geo"] = local["geo"].astype(str).str.strip().str.upper()
+    buckets = local["geo"].map(geo_bucket)
+
+    options: list[str] = []
+    if (buckets == "country").any():
+        options.append("Country")
+    for region_len in region_level_options(local):
+        options.append(region_level_label(region_len))
+    return options if options else ["Country"]
+
+
+def apply_geography_level_filter(df: pd.DataFrame, geography_label: str) -> tuple[pd.DataFrame, int | None]:
+    if geography_label == "Country":
+        return apply_geo_view_filter(df, "Country"), None
+    region_len = region_code_len_from_label(geography_label)
+    filtered = apply_geo_view_filter(df, "Regions")
+    if region_len is None:
+        return filtered, None
+    return apply_region_level_filter(filtered, region_len), region_len
+
+
 def fill_granular_defaults(df: pd.DataFrame) -> pd.DataFrame:
     local = df.copy()
     if "geo" in local.columns:
@@ -200,10 +271,16 @@ def age_filter_with_overview(
     return overview, selected, note
 
 
-def map_subset_for_geo_view(gdf: gpd.GeoDataFrame, geo_view: str) -> gpd.GeoDataFrame:
-    if geo_view == "Country":
+def map_subset_for_geo_view(gdf: gpd.GeoDataFrame, geography_label: str) -> gpd.GeoDataFrame:
+    if geography_label == "Country":
         return gdf[gdf["geo_class"] == "country"].copy()
-    return gdf[gdf["geo_class"] == "nuts"].copy()
+    region_len = region_code_len_from_label(geography_label)
+    if region_len is None:
+        return gdf[gdf["geo_class"] == "nuts"].copy()
+    nuts_level = region_level_to_nuts_level(region_len)
+    if nuts_level is None or "nuts_level" not in gdf.columns:
+        return gdf[gdf["geo_class"] == "nuts"].copy()
+    return gdf[(gdf["geo_class"] == "nuts") & (gdf["nuts_level"] == nuts_level)].copy()
 
 
 def build_map_df(
@@ -211,7 +288,7 @@ def build_map_df(
     boundaries: gpd.GeoDataFrame,
     metric: str,
     agg: str,
-    geo_view: str,
+    geography_label: str,
 ) -> tuple[gpd.GeoDataFrame, list[str]]:
     local = df.copy()
     local["geo"] = local["geo"].astype(str).str.strip().str.upper()
@@ -224,7 +301,7 @@ def build_map_df(
     matched_geos = set(grouped_with_geometry.loc[grouped_with_geometry["geometry"].notna(), "geo"].tolist())
     unmatched = sorted(source_geos - matched_geos)
 
-    display = map_subset_for_geo_view(boundaries, geo_view)
+    display = map_subset_for_geo_view(boundaries, geography_label)
     display = display[display["geo"].isin(grouped["geo"])].copy()
     display = display.merge(grouped[["geo", mapped_col]], on="geo", how="left")
     plot_df = gpd.GeoDataFrame(display, geometry="geometry", crs="EPSG:4326")
@@ -357,15 +434,17 @@ class EurostatPlugin(AppPlugin):
                 if sheet_name == "granular_sex_age":
                     df = fill_granular_defaults(df)
 
-                geo_view = "Country" if sheet_name == "occupation_country" else st.radio(
-                    "Geography view",
-                    ["Country", "Regions"],
-                    horizontal=True,
-                    key="{0}_geo_view".format(sheet_name),
-                )
-
                 preprocessed = enforce_total_sex(df, sheet_name)
-                filtered = apply_geo_view_filter(preprocessed, geo_view)
+                geo_options = ["Country"] if sheet_name == "occupation_country" else geography_level_options(preprocessed)
+                default_geo_option = "NUTS2 Regions" if "NUTS2 Regions" in geo_options else geo_options[0]
+                geography_label = st.radio(
+                    "Geography level",
+                    geo_options,
+                    horizontal=True,
+                    index=geo_options.index(default_geo_option),
+                    key="{0}_geo_level".format(sheet_name),
+                )
+                filtered, selected_region_len = apply_geography_level_filter(preprocessed, geography_label)
                 age_note = ""
 
                 if sheet_name == "granular_sex_age":
@@ -470,6 +549,8 @@ class EurostatPlugin(AppPlugin):
 
                 if age_note:
                     st.caption(age_note)
+                if selected_region_len is not None:
+                    st.caption("Region view aligned to {0}.".format(geography_label))
                 st.caption("Base rows in sheet: {0:,}".format(len(df)))
                 view_tab, map_tab = st.tabs(["Data", "Map"])
 
@@ -498,7 +579,7 @@ class EurostatPlugin(AppPlugin):
                     metric = ctrl1.selectbox("Metric", numeric_cols, index=0, key="{0}_metric".format(sheet_name))
                     agg = ctrl2.selectbox("Aggregation", ["mean", "sum", "median"], index=0, key="{0}_agg".format(sheet_name))
 
-                    plot_df, unmatched = build_map_df(filtered, boundaries, metric, agg, geo_view)
+                    plot_df, unmatched = build_map_df(filtered, boundaries, metric, agg, geography_label)
                     mapped_col = "{0}_{1}".format(metric, agg)
                     if plot_df.empty or mapped_col not in plot_df.columns:
                         st.warning("No mappable rows for the selected configuration.")
