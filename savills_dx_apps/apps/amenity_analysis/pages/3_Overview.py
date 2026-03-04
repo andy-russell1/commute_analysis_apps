@@ -173,6 +173,7 @@ with overview_tab:
         office_scores_df=office_scores_df,
         selected_office_id=str(snapshot_office),
         selected_categories=selected_map_categories,
+        chart_key="overview_snapshot_tradeoff_chart",
     )
 
     st.markdown("### Results table")
@@ -229,6 +230,7 @@ with office_insights_tab:
         office_scores_df=office_scores_df,
         selected_office_id=str(selected_office),
         selected_categories=current_categories,
+        chart_key="overview_tab_tradeoff_chart",
     )
 
     selected_office_row = office_scores_df[office_scores_df["officeID"].astype(str) == str(selected_office)]

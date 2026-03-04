@@ -1093,6 +1093,7 @@ def render_tradeoff_panel(
     office_scores_df: pd.DataFrame,
     selected_office_id: str,
     selected_categories: list[str],
+    chart_key: str = "tradeoff_chart",
 ) -> None:
     """Render single-office trade-off chart against best office and portfolio average."""
     if office_scores_df.empty:
@@ -1145,7 +1146,7 @@ def render_tradeoff_panel(
     )
     fig.update_yaxes(range=[0, 1])
     fig.update_layout(margin=dict(l=0, r=0, t=50, b=0), height=320)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key=chart_key)
 
     diff_df = chart_df.copy()
     diff_df["Gap vs best"] = (diff_df["Selected office"] - diff_df["Best office"]).round(3)
