@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from pathlib import Path
+import runpy
 from typing import Optional
 
 import streamlit as st
@@ -27,7 +29,7 @@ def _get_step() -> int:
     return int(st.session_state.get(STEP_KEY, 1))
 
 
-def _set_selected_app(app_id: str) -> None:
+def _set_selected_app(app_id: Optional[str]) -> None:
     st.session_state[APP_KEY] = app_id
 
 
@@ -91,6 +93,30 @@ def _run_pipeline(app_id: str, upload: UploadPayload) -> None:
     append_log(app_state, "Build complete")
 
 
+def _render_amenity_embedded() -> None:
+    """Render amenity analysis scripts inside the main app container."""
+    from apps.amenity_analysis.common import (
+        get_embedded_route,
+        init_amenity_state,
+        set_embedded_mode,
+    )
+
+    init_amenity_state(st.session_state)
+    set_embedded_mode(st.session_state, enabled=True)
+    route = get_embedded_route(st.session_state)
+
+    root = Path(__file__).resolve().parent
+    routes = {
+        "app": root / "apps" / "amenity_analysis" / "app.py",
+        "setup": root / "apps" / "amenity_analysis" / "pages" / "1_Setup.py",
+        "controls": root / "apps" / "amenity_analysis" / "pages" / "2_Controls.py",
+        "overview": root / "apps" / "amenity_analysis" / "pages" / "3_Overview.py",
+        "drilldown": root / "apps" / "amenity_analysis" / "pages" / "4_Location_Drilldown.py",
+    }
+    script_path = routes.get(route, routes["app"])
+    runpy.run_path(str(script_path), run_name="__main__")
+
+
 def _render_step_1() -> None:
     header_cols = st.columns([6, 1])
     with header_cols[0]:
@@ -105,9 +131,17 @@ def _render_step_1() -> None:
             st.image(str(kc_logo), use_column_width=True)
 
     plugins = {plugin.metadata.id: plugin for plugin in get_plugins()}
+    direct_apps = {
+        "amenity_analysis": {
+            "name": "Amenity Analysis",
+            "description": "Assess office amenity access using OSM amenities and optional local NaPTAN transport data.",
+            "button_label": "Run app",
+        }
+    }
     sections = [
         ("Commuting Trends", ["commute", "isochrone", "isochrone_commute"]),
         ("Talent Analytics", ["lightcast", "eurostat"]),
+        ("Location Analytics", ["amenity_analysis"]),
     ]
     display_name_overrides = {
         "commute": "Commute Impact Assessment",
@@ -128,17 +162,36 @@ def _render_step_1() -> None:
             cols = st.columns(2)
             for col_idx, app_id in enumerate(row_ids):
                 plugin = plugins.get(app_id)
-                if plugin is None:
+                direct_app = direct_apps.get(app_id)
+                if plugin is None and direct_app is None:
                     continue
                 with cols[col_idx]:
                     with st.container(border=True):
-                        title = display_name_overrides.get(app_id, plugin.metadata.name)
-                        st.subheader(title)
-                        st.write(plugin.metadata.description)
-                        if st.button(button_labels[app_id], key="open_{0}".format(plugin.metadata.id)):
-                            _set_selected_app(plugin.metadata.id)
-                            _set_step(2)
-                            st.rerun()
+                        if direct_app is not None:
+                            st.subheader(str(direct_app["name"]))
+                            st.write(str(direct_app["description"]))
+                            if st.button(
+                                str(direct_app["button_label"]),
+                                key="open_{0}".format(app_id),
+                                type="primary",
+                            ):
+                                from apps.amenity_analysis.common import (
+                                    set_embedded_mode,
+                                    set_embedded_route,
+                                )
+
+                                _set_selected_app(app_id)
+                                set_embedded_mode(st.session_state, enabled=True)
+                                set_embedded_route(st.session_state, "app")
+                                st.rerun()
+                        else:
+                            title = display_name_overrides.get(app_id, plugin.metadata.name)
+                            st.subheader(title)
+                            st.write(plugin.metadata.description)
+                            if st.button(button_labels[app_id], key="open_{0}".format(plugin.metadata.id)):
+                                _set_selected_app(plugin.metadata.id)
+                                _set_step(2)
+                                st.rerun()
     _render_restart_button()
 
 
@@ -365,6 +418,24 @@ def main() -> None:
     st.set_page_config(page_title="Savills DX Apps", layout="wide")
     app_id = _get_selected_app()
     _render_sidebar()
+
+    if app_id == "amenity_analysis":
+        from apps.amenity_analysis.common import (
+            set_embedded_mode,
+            set_embedded_route,
+        )
+
+        with st.sidebar:
+            st.divider()
+            if st.button("Back to App Hub", key="amenity_back_hub"):
+                set_embedded_mode(st.session_state, enabled=False)
+                set_embedded_route(st.session_state, "app")
+                _set_selected_app(None)
+                _set_step(1)
+                st.rerun()
+
+        _render_amenity_embedded()
+        return
 
     step = _get_step()
     if step == 1 or not app_id:

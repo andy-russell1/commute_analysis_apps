@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "buckets": {
+    "Lunch & coffee": [
+      {"key": "amenity", "values": ["cafe", "restaurant", "fast_food", "food_court", "bar", "pub"]},
+      {"key": "shop", "values": ["supermarket", "convenience", "bakery"]}
+    ],
+    "Green": [
+      {"key": "leisure", "values": ["park", "garden"]},
+      {"key": "landuse", "values": ["grass", "forest", "recreation_ground"]}
+    ],
+    "Fitness": [
+      {"key": "leisure", "values": ["fitness_centre", "sports_centre"]},
+      {"key": "amenity", "values": ["gym"]}
+    ]
+  }
+}
