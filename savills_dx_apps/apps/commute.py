@@ -665,16 +665,16 @@ class CommutePlugin(AppPlugin):
         st.markdown(style_block, unsafe_allow_html=True)
         office_lookup = {o["officeID"]: o for o in offices}
         office_ids = [o["officeID"] for o in offices]
-        baseline_office_id = "1" if "1" in office_ids else office_ids[0]
+        minimum_median_office_id = "1" if "1" in office_ids else office_ids[0]
 
-        def _baseline_median(stats_df: pd.DataFrame) -> float | None:
-            baseline_row = stats_df[stats_df["officeID"].astype(str) == str(baseline_office_id)]
-            if baseline_row.empty:
+        def _minimum_median(stats_df: pd.DataFrame) -> float | None:
+            minimum_median_row = stats_df[stats_df["officeID"].astype(str) == str(minimum_median_office_id)]
+            if minimum_median_row.empty:
                 return None
-            baseline_values = pd.to_numeric(baseline_row["Median (mins)"], errors="coerce").dropna()
-            if baseline_values.empty:
+            minimum_median_values = pd.to_numeric(minimum_median_row["Median (mins)"], errors="coerce").dropna()
+            if minimum_median_values.empty:
                 return None
-            return float(baseline_values.iloc[0])
+            return float(minimum_median_values.iloc[0])
 
         header_cols = st.columns([5, 2])
         with header_cols[0]:
@@ -820,7 +820,7 @@ class CommutePlugin(AppPlugin):
                         col1.metric("Lowest Emissions Office", "{0}".format(best_office))
 
                         baseline_series = valid_emissions[
-                            valid_emissions["officeID"].astype(str) == str(baseline_office_id)
+                            valid_emissions["officeID"].astype(str) == str(minimum_median_office_id)
                         ]["Avg (kgCO2e)"]
                         current_series = valid_emissions[valid_emissions["officeID"].astype(str) == str(office_id)][
                             "Avg (kgCO2e)"
@@ -830,35 +830,35 @@ class CommutePlugin(AppPlugin):
                         else:
                             col3.metric("Average kgCO2e", "N/A")
                         if not baseline_series.empty and not current_series.empty:
-                            delta_value = float(current_series.iloc[0] - baseline_series.iloc[0])
+                            delta_value = float(current_series.iloc[0] - best_emissions)#baseline_series.iloc[0])
                             col4.metric(
-                                "kgCO2e vs baseline office (ID 1)",
+                                "∆ Best Performing Office",
                                 "{0:+.2f} kg".format(delta_value),
                             )
                         else:
-                            col4.metric("kgCO2e vs baseline office (ID 1)", "N/A")
+                            col4.metric("∆ Best Performing Office", "N/A")
                     else:
                         col1.metric("Lowest Emissions Office", "N/A")
                         col3.metric("Average kgCO2e", "N/A")
-                        col4.metric("kgCO2e vs baseline office (ID 1)", "N/A")
+                        col4.metric("∆ Best Performing Office", "N/A")
                 else:
                     best_median = stats_df["Median (mins)"].min()
                     best_office = stats_df[stats_df["Median (mins)"] == best_median]["Office"].values[0]
                     avg_median = stats_df["Median (mins)"].mean()
-                    baseline_median = _baseline_median(stats_df)
+                    minimum_median = best_median
 
                     col1.metric("Best Performing Office", "{0}".format(best_office))
                     col3.metric("Average Median Time", "{0:.1f} min".format(avg_median))
 
                     current_median = stats_df[stats_df["officeID"].astype(str) == str(office_id)]["Median (mins)"].values
-                    if len(current_median) > 0 and baseline_median is not None:
-                        delta_value = current_median[0] - baseline_median
+                    if len(current_median) > 0 and minimum_median is not None:
+                        delta_value = current_median[0] - minimum_median
                         col4.metric(
-                            "Average time vs baseline office (ID 1)",
+                            "∆ Best Performing Office",
                             "{0:+.1f} min".format(delta_value),
                         )
                     else:
-                        col4.metric("Average time vs baseline office (ID 1)", "N/A")
+                        col4.metric("∆ Best Performing Office", "N/A")
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="print-map">', unsafe_allow_html=True)
@@ -951,7 +951,7 @@ class CommutePlugin(AppPlugin):
                         col1.metric("Lowest Emissions Office", "{0}".format(best_office))
 
                         baseline_series = valid_emissions[
-                            valid_emissions["officeID"].astype(str) == str(baseline_office_id)
+                            valid_emissions["officeID"].astype(str) == str(minimum_median_office_id)
                         ]["Avg (kgCO2e)"]
                         current_series = valid_emissions[valid_emissions["officeID"].astype(str) == str(office_id)][
                             "Avg (kgCO2e)"
@@ -963,33 +963,33 @@ class CommutePlugin(AppPlugin):
                         if not baseline_series.empty and not current_series.empty:
                             delta_value = float(current_series.iloc[0] - baseline_series.iloc[0])
                             col4.metric(
-                                "kgCO2e vs baseline office (ID 1)",
+                                "∆ Best Performing Office",
                                 "{0:+.2f} kg".format(delta_value),
                             )
                         else:
-                            col4.metric("kgCO2e vs baseline office (ID 1)", "N/A")
+                            col4.metric("∆ Best Performing Office", "N/A")
                     else:
                         col1.metric("Lowest Emissions Office", "N/A")
                         col3.metric("Average kgCO2e", "N/A")
-                        col4.metric("kgCO2e vs baseline office (ID 1)", "N/A")
+                        col4.metric("∆ Best Performing Office", "N/A")
                 else:
                     best_median = stats_df["Median (mins)"].min()
                     best_office = stats_df[stats_df["Median (mins)"] == best_median]["Office"].values[0]
                     avg_median = stats_df["Median (mins)"].mean()
-                    baseline_median = _baseline_median(stats_df)
+                    minimum_median = best_median
 
                     col1.metric("Best Performing Office", "{0}".format(best_office))
                     col3.metric("Average Median Time", "{0:.1f} min".format(avg_median))
 
                     current_median = stats_df[stats_df["officeID"].astype(str) == str(office_id)]["Median (mins)"].values
-                    if len(current_median) > 0 and baseline_median is not None:
-                        delta_value = current_median[0] - baseline_median
+                    if len(current_median) > 0 and minimum_median is not None:
+                        delta_value = current_median[0] - minimum_median
                         col4.metric(
-                            "Average time vs baseline office (ID 1)",
+                            "∆ Best Performing Office",
                             "{0:+.1f} min".format(delta_value),
                         )
                     else:
-                        col4.metric("Average time vs baseline office (ID 1)", "N/A")
+                        col4.metric("∆ Best Performing Office", "N/A")
 
             st.divider()
 
