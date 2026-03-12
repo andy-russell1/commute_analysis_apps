@@ -1,0 +1,22 @@
+﻿# Python cache/artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Test/cache
+.pytest_cache/
+.cache/
+
+# Local migration/external intake
+_migration/
+_external/
+.codex_tmp/
+
+# Virtual environments
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+Thumbs.db

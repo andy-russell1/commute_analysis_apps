@@ -23,8 +23,9 @@ from apps.amenity_analysis.common import (
     run_multi_radius_analysis,
     safe_set_page_config,
 )
-from dx_core.data.naptan_loader import load_naptan_stops
-from dx_core.scoring.amenity_index import normalise_weights
+from shared.data.naptan_loader import load_naptan_stops
+from shared.ui.page_header import render_page_header
+from shared.scoring.amenity_index import normalise_weights
 
 
 def _render_scoring_view() -> None:
@@ -65,7 +66,7 @@ def _render_scoring_view() -> None:
 safe_set_page_config(page_title="Amenity Analysis - Controls", page_icon="🎛️", layout="wide")
 init_amenity_state(st.session_state)
 
-st.title("Controls")
+render_page_header("Controls")
 
 sites_df = st.session_state[SITES_DF_KEY]
 if sites_df.empty:

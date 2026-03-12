@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from core.commute import filter_travel_time_valid, match_columns
+from apps.commute.logic import filter_travel_time_valid, match_columns
 
 
 def test_commute_validation_passes():

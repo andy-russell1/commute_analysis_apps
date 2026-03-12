@@ -19,13 +19,14 @@ from apps.amenity_analysis.common import (
     render_density_map,
     safe_set_page_config,
 )
-from dx_core.scoring.amenity_index import bucket_slug, count_column, nearest_distance_column
+from shared.ui.page_header import render_page_header
+from shared.scoring.amenity_index import bucket_slug, count_column, nearest_distance_column
 
 
 safe_set_page_config(page_title="Amenity Analysis - Location Drilldown", page_icon="🧭", layout="wide")
 init_amenity_state(st.session_state)
 
-st.title("Location Drilldown")
+render_page_header("Location Drilldown")
 
 results_by_radius = st.session_state[RESULTS_BY_RADIUS_KEY]
 if not results_by_radius:

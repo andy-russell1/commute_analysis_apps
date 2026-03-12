@@ -1,7 +1,22 @@
-# Python bytecode
+# Python cache/artifacts
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
 
-# Local caches / app caches
+# Test/cache
+.pytest_cache/
 .cache/
-savills_dx_apps/.cache/
+
+# Local migration/external intake
+_migration/
+_external/
+.codex_tmp/
+
+# Virtual environments
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+Thumbs.db

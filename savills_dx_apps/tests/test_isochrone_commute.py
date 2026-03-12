@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from apps.isochrone_commute import _extract_worker_points
+from apps.isochrone_commute.wizard import _extract_worker_points
 
 
 def test_extract_worker_points_from_successful_format():

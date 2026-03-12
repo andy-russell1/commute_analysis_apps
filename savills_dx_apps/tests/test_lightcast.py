@@ -4,7 +4,7 @@ from io import BytesIO
 
 import pandas as pd
 
-from core.lightcast import build_master_from_files, detect_lightcast_like
+from apps.lightcast.io import build_master_from_files, detect_lightcast_like
 
 
 def test_lightcast_master_builds():

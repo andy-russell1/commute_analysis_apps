@@ -13,13 +13,14 @@ from apps.amenity_analysis.common import (
     safe_set_page_config,
     set_embedded_mode,
 )
-from core.session import APP_KEY, STEP_KEY
+from shared.ui.page_header import render_page_header
+from shared.runtime.session import APP_KEY, STEP_KEY
 
 
 safe_set_page_config(page_title="Amenity Analysis", page_icon="📍", layout="wide")
 init_amenity_state(st.session_state)
 
-st.title("Amenity Analysis")
+render_page_header("Amenity Analysis")
 st.write("Amenity KPI using OSM amenities and optional local NaPTAN transport data.")
 
 sites_df = st.session_state[SITES_DF_KEY]
@@ -33,11 +34,11 @@ c3.metric("Selected metrics", int(len(st.session_state[SELECTED_METRICS_KEY])))
 if st.session_state[ANALYSIS_MESSAGES_KEY]:
     st.warning("Some data sources returned warnings. Check Overview for details.")
 
-if st.button("Go to Setup", type="primary"):
+if st.button("Go to Setup", type="primary", key="amenity_home_go_to_setup"):
     navigate_to(st.session_state, route="setup", standalone_page_path="pages/1_Setup.py")
 
 if st.session_state.get(EMBEDDED_MODE_KEY):
-    if st.button("Back to App Hub"):
+    if st.button("Back to App Hub", key="amenity_home_back_to_hub"):
         set_embedded_mode(st.session_state, enabled=False)
         st.session_state[APP_KEY] = None
         st.session_state[STEP_KEY] = 1

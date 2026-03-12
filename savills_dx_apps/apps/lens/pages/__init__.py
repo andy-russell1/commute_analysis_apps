@@ -1,0 +1,2 @@
+"""LENS page scripts."""
+

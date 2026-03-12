@@ -22,13 +22,14 @@ from apps.amenity_analysis.common import (
     render_tradeoff_panel,
     safe_set_page_config,
 )
-from dx_core.scoring.amenity_index import bucket_slug
+from shared.ui.page_header import render_page_header
+from shared.scoring.amenity_index import bucket_slug
 
 
 safe_set_page_config(page_title="Amenity Analysis - Overview", page_icon="📊", layout="wide")
 init_amenity_state(st.session_state)
 
-st.title("Overview")
+render_page_header("Overview")
 
 results_by_radius = st.session_state[RESULTS_BY_RADIUS_KEY]
 if not results_by_radius:

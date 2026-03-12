@@ -11,14 +11,15 @@ from apps.amenity_analysis.common import (
     navigate_to,
     safe_set_page_config,
 )
-from dx_core.io.excel import is_excel_file, list_excel_sheets, safe_read_upload
-from dx_core.io.validation import validate_and_clean_sites
+from shared.io.excel import is_excel_file, list_excel_sheets, safe_read_upload
+from shared.ui.page_header import render_page_header
+from shared.validation.sites import validate_and_clean_sites
 
 
 safe_set_page_config(page_title="Amenity Analysis - Setup", page_icon="📥", layout="wide")
 init_amenity_state(st.session_state)
 
-st.title("Setup")
+render_page_header("Setup")
 st.markdown("Required headers: `officeID`, `address`, `office - Latitude`, `office - Longitude`")
 
 radius_options = [200, 400, 800, 1000, 1500]

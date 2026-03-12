@@ -15,12 +15,12 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-from dx_core.data.cache import ensure_cache_dir, make_hashed_key, read_json_cache, write_json_cache
-from dx_core.data.naptan_loader import load_naptan_stops, nearest_stop_distances_m
-from dx_core.data.osm_overpass import OverpassRateLimitError, fetch_pois, load_osm_tag_map
-from dx_core.geo.buffers import build_combined_geojson, geojson_export_supported
-from dx_core.geo.distance import EARTH_RADIUS_M, haversine_vector_m
-from dx_core.scoring.amenity_index import (
+from shared.data.cache import ensure_cache_dir, make_hashed_key, read_json_cache, write_json_cache
+from shared.data.naptan_loader import load_naptan_stops, nearest_stop_distances_m
+from shared.data.osm_overpass import OverpassRateLimitError, fetch_pois, load_osm_tag_map
+from shared.geo.buffers import build_combined_geojson, geojson_export_supported
+from shared.geo.distance import EARTH_RADIUS_M, haversine_vector_m
+from shared.scoring.amenity_index import (
     bucket_slug,
     count_column,
     nearest_distance_column,
