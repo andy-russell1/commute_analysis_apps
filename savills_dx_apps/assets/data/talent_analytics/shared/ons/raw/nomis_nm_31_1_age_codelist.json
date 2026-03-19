@@ -1,0 +1,544 @@
+{
+  "structure": {
+    "codelists": {
+      "codelist": [
+        {
+          "agencyid": "NOMIS",
+          "id": "CL_31_1_AGE",
+          "code": [
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "True",
+                    "annotationtitle": "IsTotal"
+                  },
+                  {
+                    "annotationtext": "True",
+                    "annotationtitle": "IsDefault"
+                  },
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "description": {
+                "value": "All ages",
+                "lang": "en"
+              },
+              "value": 0
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged under 1 year",
+                "lang": "en"
+              },
+              "value": 1
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 1 - 4 years",
+                "lang": "en"
+              },
+              "value": 2
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 5 - 9 years",
+                "lang": "en"
+              },
+              "value": 3
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 10 - 14 years",
+                "lang": "en"
+              },
+              "value": 4
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 15 - 19 years",
+                "lang": "en"
+              },
+              "value": 5
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 20 - 24 years",
+                "lang": "en"
+              },
+              "value": 6
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 25 - 29 years",
+                "lang": "en"
+              },
+              "value": 7
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 30 - 34 years",
+                "lang": "en"
+              },
+              "value": 8
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 35 - 39 years",
+                "lang": "en"
+              },
+              "value": 9
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 40 - 44 years",
+                "lang": "en"
+              },
+              "value": 10
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 45 - 49 years",
+                "lang": "en"
+              },
+              "value": 11
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 50 - 54 years",
+                "lang": "en"
+              },
+              "value": 12
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 55 - 59 years",
+                "lang": "en"
+              },
+              "value": 13
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 60 - 64 years",
+                "lang": "en"
+              },
+              "value": 14
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 65 - 69 years",
+                "lang": "en"
+              },
+              "value": 15
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 70 - 74 years",
+                "lang": "en"
+              },
+              "value": 16
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 75 - 79 years",
+                "lang": "en"
+              },
+              "value": 17
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 80 - 84 years",
+                "lang": "en"
+              },
+              "value": 18
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 85 and over",
+                "lang": "en"
+              },
+              "value": 19
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 16 - 59/64",
+                "lang": "en"
+              },
+              "value": 20
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 18 - 24",
+                "lang": "en"
+              },
+              "value": 21
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 16 - 64",
+                "lang": "en"
+              },
+              "value": 22
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 0 - 15",
+                "lang": "en"
+              },
+              "value": 24
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "age",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 0,
+              "description": {
+                "value": "Aged 65 and over",
+                "lang": "en"
+              },
+              "value": 25
+            }
+          ],
+          "name": {
+            "value": "age",
+            "lang": "en"
+          },
+          "uri": ""
+        }
+      ]
+    },
+    "header": {
+      "id": "NM_31_1",
+      "prepared": "2026-03-19T16:25:26Z",
+      "sender": {
+        "contact": {
+          "email": "support@nomisweb.co.uk",
+          "name": "Nomis",
+          "uri": "https://www.nomisweb.co.uk"
+        },
+        "id": "NOMIS"
+      },
+      "test": "false"
+    },
+    "xmlns": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/message",
+    "common": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/common",
+    "structure": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/structure",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "schemalocation": "http://sdmx.org/docs/2_0/SDMXMessage.xsd"
+  }
+}

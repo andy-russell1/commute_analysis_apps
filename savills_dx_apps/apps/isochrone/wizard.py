@@ -10,6 +10,7 @@ from folium.plugins import MarkerCluster
 import streamlit.components.v1 as components
 
 from shared.runtime.downloads import df_to_csv_bytes
+from shared.ui.kpi import render_kpi_strip
 from shared.ui.page_header import render_page_header
 from apps.isochrone.io import load_isochrones_from_zip, validate_isochrone_zip
 from shared.runtime.models import AppArtifacts, AppMetadata, AppPlugin, UploadPayload
@@ -435,10 +436,14 @@ class IsochronePlugin(AppPlugin):
                 st.warning("Unable to compute resident KPIs: {0}".format(exc))
 
         if pop_counts:
-            kpi_cols = st.columns(3)
-            kpi_cols[0].metric("Residents within 30 min", "{0:,.0f}".format(pop_counts.get(30.0, 0.0)))
-            kpi_cols[1].metric("Residents within 45 min", "{0:,.0f}".format(pop_counts.get(45.0, 0.0)))
-            kpi_cols[2].metric("Residents within 60 min", "{0:,.0f}".format(pop_counts.get(60.0, 0.0)))
+            render_kpi_strip(
+                [
+                    ("Residents within 30 min", "{0:,.0f}".format(pop_counts.get(30.0, 0.0))),
+                    ("Residents within 45 min", "{0:,.0f}".format(pop_counts.get(45.0, 0.0))),
+                    ("Residents within 60 min", "{0:,.0f}".format(pop_counts.get(60.0, 0.0))),
+                ],
+                columns=3,
+            )
 
         commuters_df = None
         pop_label = None

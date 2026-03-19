@@ -1,0 +1,155 @@
+{
+  "structure": {
+    "header": {
+      "id": "NM_31_1",
+      "prepared": "2026-03-19T16:25:26Z",
+      "sender": {
+        "contact": {
+          "email": "support@nomisweb.co.uk",
+          "name": "Nomis",
+          "uri": "https://www.nomisweb.co.uk"
+        },
+        "id": "NOMIS"
+      },
+      "test": "false"
+    },
+    "keyfamilies": {
+      "keyfamily": [
+        {
+          "agencyid": "NOMIS",
+          "annotations": {
+            "annotation": [
+              {
+                "annotationtext": "Current (being actively updated)",
+                "annotationtitle": "Status"
+              },
+              {
+                "annotationtext": "Population,Age,Mid-year",
+                "annotationtitle": "Keywords"
+              },
+              {
+                "annotationtext": "Persons",
+                "annotationtitle": "Units"
+              },
+              {
+                "annotationtext": "pest",
+                "annotationtitle": "contenttype/sources"
+              },
+              {
+                "annotationtext": "pest",
+                "annotationtitle": "SubDescription"
+              },
+              {
+                "annotationtext": "pestnew",
+                "annotationtitle": "Mnemonic"
+              },
+              {
+                "annotationtext": "2004-09-09 09:30:00",
+                "annotationtitle": "FirstReleased"
+              },
+              {
+                "annotationtext": "2025-07-30 09:30:00",
+                "annotationtitle": "LastUpdated"
+              },
+              {
+                "annotationtext": "2025-07-30 09:30:00",
+                "annotationtitle": "LastRevised"
+              }
+            ]
+          },
+          "id": "NM_31_1",
+          "components": {
+            "attribute": [
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Observation",
+                "codelist": "CL_OBS_STATUS",
+                "conceptref": "OBS_STATUS"
+              },
+              {
+                "assignmentstatus": "Conditional",
+                "attachmentlevel": "Observation",
+                "codelist": "CL_OBS_CONF",
+                "conceptref": "OBS_CONF"
+              },
+              {
+                "assignmentstatus": "Conditional",
+                "attachmentlevel": "Observation",
+                "codelist": "CL_OBS_ROUND",
+                "conceptref": "OBS_ROUND"
+              },
+              {
+                "assignmentstatus": "Conditional",
+                "attachmentlevel": "Series",
+                "codelist": "CL_UNIT_MULT",
+                "conceptref": "UNIT_MULTIPLIER"
+              },
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Series",
+                "codelist": "CL_TIME_FORMAT",
+                "conceptref": "TIME_FORMAT"
+              },
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Series",
+                "codelist": "CL_UNIT",
+                "conceptref": "UNIT"
+              },
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Series",
+                "conceptref": "TITLE_COMPL"
+              }
+            ],
+            "dimension": [
+              {
+                "codelist": "CL_31_1_GEOGRAPHY",
+                "conceptref": "GEOGRAPHY"
+              },
+              {
+                "codelist": "CL_31_1_SEX",
+                "conceptref": "SEX"
+              },
+              {
+                "codelist": "CL_31_1_AGE",
+                "conceptref": "AGE"
+              },
+              {
+                "codelist": "CL_31_1_MEASURES",
+                "conceptref": "MEASURES"
+              },
+              {
+                "codelist": "CL_31_1_FREQ",
+                "conceptref": "FREQ",
+                "isfrequencydimension": "true"
+              }
+            ],
+            "primarymeasure": {
+              "conceptref": "OBS_VALUE"
+            },
+            "timedimension": {
+              "codelist": "CL_31_1_TIME",
+              "conceptref": "TIME"
+            }
+          },
+          "description": {
+            "value": "The midyear (30 June) estimates of population are based on results from the latest Census of Population with allowance for under-enumeration. Available at Local Authority level and above.",
+            "lang": "en"
+          },
+          "name": {
+            "value": "Population estimates - local authority based by five year age band",
+            "lang": "en"
+          },
+          "uri": "Nm-31d1",
+          "version": 1.0
+        }
+      ]
+    },
+    "xmlns": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/message",
+    "common": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/common",
+    "structure": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/structure",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "schemalocation": "http://sdmx.org/docs/2_0/SDMXMessage.xsd"
+  }
+}

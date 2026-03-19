@@ -4,7 +4,7 @@ import streamlit as st
 
 from apps.lens.common import render_nav_link, safe_set_page_config
 from apps.lens.core import model
-from apps.lens.core.constants import MODE_ADVANCED
+from shared.ui.kpi import render_kpi_strip
 
 
 def render_page() -> None:
@@ -14,6 +14,7 @@ def render_page() -> None:
         "LENS Location Evaluation",
         caption="Decision-first location scoring for client-ready recommendations.",
     )
+    model.render_dashboard_chrome()
 
     context = model.render_sidebar()
     model.ensure_context_ready(context, upload_message="Upload a workbook from the sidebar to start.")
@@ -43,45 +44,34 @@ def render_page() -> None:
 
     ranks = model.build_city_ranks(bundle["overall_scores"])
     top3 = ranks.head(3).copy()
+    top_table = model.build_home_recommendations_table(bundle, top_n=3)
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Recommended Cities", int(top3.shape[0]))
-    col2.metric("Cities Evaluated", int(ranks.shape[0]))
-    col3.metric("Mode", context["mode"])
+    render_kpi_strip(
+        [
+            ("Recommended Cities", int(top3.shape[0])),
+            ("Cities Evaluated", int(ranks.shape[0])),
+            ("Mode", context["mode"]),
+        ],
+        columns=3,
+    )
 
     st.subheader("Top Recommendations")
-    if context["mode"] == MODE_ADVANCED:
-        top_table = top3[["overall_rank", "city", "overall_index", "overall_score", "overall_tier"]].rename(
-            columns={
-                "overall_rank": "rank",
-                "city": "city",
-                "overall_index": "overall_index",
-                "overall_score": "audit_score",
-                "overall_tier": "tier",
-            }
-        )
-        st.dataframe(model.format_table_for_display(top_table, decimals=1), use_container_width=True, hide_index=True)
-    else:
-        top_table = top3[["overall_rank", "city", "overall_index", "distance_to_leader", "overall_tier"]].rename(
-            columns={
-                "overall_rank": "rank",
-                "city": "city",
-                "overall_index": "overall_index",
-                "distance_to_leader": "distance_to_leader",
-                "overall_tier": "tier",
-            }
-        )
-        st.dataframe(model.format_table_for_display(top_table, decimals=1), use_container_width=True, hide_index=True)
+    st.dataframe(model.format_table_for_display(top_table, decimals=1), use_container_width=True, hide_index=True)
 
     best_city = str(top3.iloc[0]["city"])
     best_drill = model.build_city_drilldown(bundle, best_city, top_n=3)
     strongest_macro = best_drill["summary"]["strongest_macro"]
     tradeoff_macro = best_drill["summary"]["tradeoff_macro"]
 
+    model.render_context_sentence(
+        "Top-line answer",
+        f"{best_city} currently leads the portfolio, with {strongest_macro} as the strongest macro and {tradeoff_macro} as the main trade-off area.",
+    )
+
     st.subheader("Quick Narrative")
     st.write(
         f"**{best_city}** currently ranks #1 overall. Its strongest performance is in **{strongest_macro}**, "
-        f"while **{tradeoff_macro}** is the main tradeoff area to monitor."
+        f"while **{tradeoff_macro}** is the main trade-off area to monitor."
     )
 
     st.subheader("Next Steps")
@@ -93,6 +83,12 @@ def render_page() -> None:
         key="lens_home_nav_results",
     )
     render_nav_link(
+        "Open Benchmarking",
+        route="benchmarking",
+        standalone_page_path="pages/3_Benchmarking.py",
+        key="lens_home_nav_benchmarking",
+    )
+    render_nav_link(
         "Open Weights and Scoring",
         route="weights",
         standalone_page_path="pages/1_Weights_and_Scoring.py",
@@ -101,27 +97,54 @@ def render_page() -> None:
     render_nav_link(
         "Open Export",
         route="export",
-        standalone_page_path="pages/4_Export.py",
+        standalone_page_path="pages/5_Export.py",
         key="lens_home_nav_export",
     )
     render_nav_link(
         "Open Methodology and Glossary",
         route="methodology",
-        standalone_page_path="pages/5_Methodology_and_Glossary.py",
+        standalone_page_path="pages/6_Methodology_and_Glossary.py",
         key="lens_home_nav_methodology",
     )
 
-    if context["mode"] == "Advanced":
-        parsed = context["parsed"]
-        with st.expander("Technical Preview (Advanced)", expanded=False):
-            criteria_preview = parsed["criteria"][
-                ["macro", "major", "micro", "macro_weight_template", "major_weight_template", "minor_weight_template"]
-            ].copy()
-            st.caption("Criteria Structure Preview")
-            st.dataframe(model.format_table_for_display(criteria_preview, decimals=3), use_container_width=True)
-            st.caption("Raw Data Preview")
-            raw_preview = parsed["raw_data"][["macro", "major", "micro", "source", *parsed["city_columns"]]].head(10)
-            st.dataframe(model.format_table_for_display(raw_preview, decimals=3), use_container_width=True)
+    parsed = context["parsed"]
+    with st.expander("Technical Preview", expanded=False):
+        st.caption("A concise audit view of the uploaded structure, live raw inputs, and any uploaded reference ranks.")
+
+        criteria_preview = parsed["criteria"][
+            ["macro", "major", "micro", "macro_weight_template", "major_weight_template", "minor_weight_template"]
+        ].copy()
+        st.caption("Criteria structure")
+        st.dataframe(model.format_table_for_display(criteria_preview, decimals=3), use_container_width=True, hide_index=True)
+
+        st.caption("Raw data preview")
+        raw_preview = parsed["raw_data"][["macro", "major", "micro", "source", *parsed["city_columns"]]].head(10).copy()
+        raw_preview_display = model.format_table_for_display(raw_preview, decimals=3)
+        raw_preview_reverse = raw_preview["source"].fillna("").str.contains("lower is better", case=False, regex=False)
+        st.dataframe(
+            model.style_relative_value_table(
+                raw_preview_display,
+                value_columns=[model.to_proper_case_label(city) for city in parsed["city_columns"]],
+                decimals=3,
+                reverse_rows=raw_preview_reverse,
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        if not parsed["rank_reference"].empty:
+            st.caption("Uploaded reference rank rows")
+            reference_preview = model.build_reference_rank_audit_table(parsed["rank_reference"])
+            st.dataframe(
+                model.style_relative_value_table(
+                    model.format_table_for_display(reference_preview, decimals=0),
+                    value_columns=[model.to_proper_case_label(city) for city in parsed["city_columns"]],
+                    decimals=0,
+                    reverse_rows={idx: True for idx in reference_preview.index},
+                ),
+                use_container_width=True,
+                hide_index=True,
+            )
 
     if context["data_validation"].warnings:
         st.info(f"Workbook loaded with {len(context['data_validation'].warnings)} warning(s).")

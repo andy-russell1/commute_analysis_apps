@@ -9,6 +9,7 @@ from apps.lens.core.constants import (
     DIRECTION_LOWER,
     SCORING_METHOD_LOG_ROBUST_MINMAX,
     SCORING_METHOD_MINMAX,
+    SCORING_METHOD_PERCENTILE,
     SCORING_METHOD_PERCENTILE_RANK,
     SCORING_METHOD_RANK,
     SCORING_METHOD_ROBUST_MINMAX,
@@ -22,7 +23,8 @@ def test_infer_direction_from_source():
 
 
 def test_normalize_method_key_maps_legacy_percentile():
-    assert scoring.normalize_scoring_method_key("percentile") == SCORING_METHOD_PERCENTILE_RANK
+    assert scoring.normalize_scoring_method_key("percentile") == SCORING_METHOD_PERCENTILE
+    assert scoring.normalize_scoring_method_key("percentile_rank") == SCORING_METHOD_PERCENTILE_RANK
 
 
 def test_rank_score_normalization():
@@ -35,10 +37,37 @@ def test_rank_score_normalization():
 
 def test_percentile_rank_score_normalization():
     values = pd.Series([10.0, 20.0, 30.0], index=["A", "B", "C"])
-    scores = scoring.score_series(values, method=SCORING_METHOD_PERCENTILE_RANK, direction="higher")
-    assert scores["A"] == 0.0
-    assert scores["B"] == 0.5
+    scores = scoring.score_series(values, method=SCORING_METHOD_PERCENTILE, direction="higher")
+    assert scores["A"] == 1.0 / 3.0
+    assert scores["B"] == 2.0 / 3.0
     assert scores["C"] == 1.0
+
+
+def test_competition_rank_has_no_half_steps_and_supports_ties():
+    values = pd.Series([100.0, 100.0, 5000.0], index=["A", "B", "C"])
+    ranks = scoring.compute_rank_series(values, direction="higher")
+    assert ranks["C"] == 1.0
+    assert ranks["A"] == 2.0
+    assert ranks["B"] == 2.0
+    assert all(float(value).is_integer() for value in ranks.dropna())
+
+
+def test_percentile_is_distinct_from_rank_for_tied_distribution():
+    values = pd.Series([10.0, 10.0, 20.0, 30.0], index=["A", "B", "C", "D"])
+    rank_scores = scoring.score_series(values, method=SCORING_METHOD_RANK, direction="higher")
+    percentile_scores = scoring.score_series(values, method=SCORING_METHOD_PERCENTILE, direction="higher")
+    assert rank_scores["A"] == 0.0
+    assert percentile_scores["A"] == 0.5
+    assert percentile_scores["C"] == 0.75
+    assert percentile_scores["D"] == 1.0
+
+
+def test_percentile_applies_direction_before_ecdf():
+    values = pd.Series([10.0, 20.0, 30.0], index=["A", "B", "C"])
+    scores = scoring.score_series(values, method=SCORING_METHOD_PERCENTILE, direction="lower")
+    assert scores["A"] == 1.0
+    assert scores["B"] == 2.0 / 3.0
+    assert scores["C"] == 1.0 / 3.0
 
 
 def test_minmax_and_robust_and_log_robust_ranges():
@@ -54,7 +83,7 @@ def test_constant_column_returns_half():
     values = pd.Series([3.0, 3.0, 3.0, np.nan], index=["A", "B", "C", "D"])
     for method in [
         SCORING_METHOD_RANK,
-        SCORING_METHOD_PERCENTILE_RANK,
+        SCORING_METHOD_PERCENTILE,
         SCORING_METHOD_MINMAX,
         SCORING_METHOD_ROBUST_MINMAX,
         SCORING_METHOD_LOG_ROBUST_MINMAX,
@@ -168,5 +197,30 @@ def test_compute_micro_scores_respects_direction_override():
     city_scores = out.set_index("city")["score"].to_dict()
     assert city_scores["CityB"] == 1.0
     assert city_scores["CityA"] == 0.0
+
+
+def test_compute_micro_scores_uses_python_competition_ranks():
+    raw = pd.DataFrame(
+        [
+            {
+                "criterion_id": "c1",
+                "macro": "Talent",
+                "major": "Demographics",
+                "micro": "Population",
+                "source": "count; Higher is better",
+                "CityA": 100,
+                "CityB": 100,
+                "CityC": 300,
+            }
+        ]
+    )
+    out = scoring.compute_micro_scores(
+        raw_data=raw,
+        city_columns=["CityA", "CityB", "CityC"],
+        direction_map={},
+        method=SCORING_METHOD_RANK,
+    )
+    ranks = out.set_index("city")["rank"].to_dict()
+    assert ranks == {"CityA": 2.0, "CityB": 2.0, "CityC": 1.0}
 
 

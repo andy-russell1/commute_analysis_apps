@@ -23,6 +23,7 @@ from apps.amenity_analysis.common import (
     safe_set_page_config,
 )
 from shared.ui.page_header import render_page_header
+from shared.ui.kpi import render_kpi_strip
 from shared.scoring.amenity_index import bucket_slug
 
 
@@ -102,14 +103,17 @@ overview_tab, office_insights_tab, comparison_tab = st.tabs(["Overview", "Office
 with overview_tab:
     st.subheader("Overview")
 
-    m1, m2, m3, m4 = st.columns(4)
     best_idx = office_scores_df["total_score"].astype(float).idxmax()
     best_office = str(office_scores_df.loc[best_idx, "office_name"])
     best_score = float(office_scores_df.loc[best_idx, "total_score"])
-    m1.metric("Best office", best_office)
-    m2.metric("Best score", f"{best_score:.1f}")
-    m3.metric("Radius", f"{selected_radius} m")
-    m4.metric("Unique amenities shown", len(map_points_df))
+    render_kpi_strip(
+        [
+            ("Best office", best_office),
+            ("Best score", f"{best_score:.1f}"),
+            ("Radius", f"{selected_radius} m"),
+            ("Unique amenities shown", len(map_points_df)),
+        ]
+    )
 
     st.caption(
         f"Density map radius: {selected_radius}m. Categories shown: {', '.join(selected_map_categories) if selected_map_categories else 'None'}"

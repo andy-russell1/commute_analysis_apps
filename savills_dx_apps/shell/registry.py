@@ -11,6 +11,7 @@ from apps.isochrone.module import MODULE as ISOCHRONE_MODULE
 from apps.isochrone_commute.module import MODULE as ISOCHRONE_COMMUTE_MODULE
 from apps.lens.module import MODULE as LENS_MODULE
 from apps.lightcast.module import MODULE as LIGHTCAST_MODULE
+from apps.talent_analytics.module import MODULE as TALENT_ANALYTICS_MODULE
 from shell.registry_models import Module, ModuleMetadata
 
 
@@ -36,6 +37,7 @@ _MODULES: list[Module] = [
     ISOCHRONE_MODULE,
     ISOCHRONE_COMMUTE_MODULE,
     LIGHTCAST_MODULE,
+    TALENT_ANALYTICS_MODULE,
     EUROSTAT_MODULE,
     AMENITY_MODULE,
     LENS_MODULE,

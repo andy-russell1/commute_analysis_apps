@@ -26,7 +26,7 @@ The shell supports exactly three module types:
 
 ## Design System Rule
 
-Use LENS-inspired styling for shell chrome, cards, headers, controls, and navigation, while preserving semantic analytics colours where colour encodes meaning:
+Use 'LENS' styling for shell chrome, cards, headers, controls, and navigation, while preserving semantic analytics colours where colour encodes meaning:
 
 - Keep red/amber/green semantics intact.
 - Keep heatmaps/gradients/diverging analytic scales intact.

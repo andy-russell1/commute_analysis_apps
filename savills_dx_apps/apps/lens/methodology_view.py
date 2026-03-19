@@ -7,11 +7,8 @@ from apps.lens.common import safe_set_page_config
 from apps.lens.core import model, scoring
 from apps.lens.core.constants import (
     MODE_ADVANCED,
-    SCORING_METHOD_LOG_ROBUST_MINMAX,
-    SCORING_METHOD_MINMAX,
-    SCORING_METHOD_PERCENTILE_RANK,
+    SCORING_METHOD_PERCENTILE,
     SCORING_METHOD_RANK,
-    SCORING_METHOD_ROBUST_MINMAX,
 )
 
 
@@ -26,8 +23,8 @@ def render_page() -> None:
     st.subheader("What This Model Does")
     st.write(
         "LENS converts multiple location indicators into one comparable overall score. "
-        "Each city is scored at micro level, then rolled up through major and macro layers "
-        "using selected weights."
+        "Each city is scored from raw metric values in Python at micro level, then rolled up "
+        "through major and macro layers using selected weights."
     )
 
     st.subheader("Glossary")
@@ -39,6 +36,8 @@ def render_page() -> None:
 - **Weighting Mode (Simple)**: only macro weights are edited; major and micro weights are equally split.
 - **Weighting Mode (Advanced)**: macro, major, and micro weights are directly editable.
 - **Direction**: whether higher values are better or lower values are better.
+- **Competition Rank**: tied cities share the same rank and the next rank skips accordingly (for example 1, 2, 2, 4).
+- **Reference Rank Rows**: uploaded rank rows retained for audit/reference only; they never drive scoring.
 - **Contribution / Driver**: impact of a micro criterion on a city outcome based on score and effective weight.
 """
     )
@@ -49,71 +48,45 @@ def render_page() -> None:
             [
                 {
                     "method": "Rank",
-                    "what_it_does": "Normalises average rank positions to 0-1.",
+                    "what_it_does": "Computes competition ranks from raw values in Python.",
                     "when_to_use": "When relative ordering matters most.",
-                    "pros": "Stable and easy to explain.",
+                    "pros": "Stable, auditable, and tie-aware.",
                     "cons": "Ignores magnitude gaps.",
                 },
                 {
-                    "method": "Percentile Rank",
-                    "what_it_does": "Normalised rank in 0-1 (ordering-based).",
-                    "when_to_use": "When stakeholders prefer percentile language.",
-                    "pros": "Interpretable rank position.",
-                    "cons": "Does not preserve magnitude gaps.",
-                },
-                {
-                    "method": "Min-Max",
-                    "what_it_does": "Scales raw values by min and max to 0-1.",
-                    "when_to_use": "When absolute distance between cities matters.",
-                    "pros": "Magnitude-aware.",
-                    "cons": "Sensitive to outliers.",
-                },
-                {
-                    "method": "Robust Min-Max",
-                    "what_it_does": "Winsorises at 5th/95th percentiles then min-max scales.",
-                    "when_to_use": "When outliers exist but magnitude still matters.",
-                    "pros": "Less outlier-sensitive.",
-                    "cons": "Extreme values are compressed.",
-                },
-                {
-                    "method": "Log + Robust Min-Max",
-                    "what_it_does": "Applies log1p (with shift if negative), then robust min-max.",
-                    "when_to_use": "Right-skewed metrics (for example population, income, postings).",
-                    "pros": "Skew-aware and outlier-robust.",
-                    "cons": "Less intuitive raw-value mapping.",
+                    "method": "Percentile",
+                    "what_it_does": "Computes ECDF percentile position from direction-adjusted raw values.",
+                    "when_to_use": "When stakeholders want an indexed comparison scale for visuals.",
+                    "pros": "Distribution-position based and presentation-ready for radar/polar views.",
+                    "cons": "Still does not preserve magnitude gaps between distinct values.",
                 },
             ]
         )
         st.dataframe(model.format_table_for_display(method_table), use_container_width=True, hide_index=True)
 
         st.warning(
-            "Percentile Rank is a normalised rank. It does not preserve magnitude differences and is not a skewness "
-            "correction in the magnitude sense."
+            "Uploaded rank rows are reference-only. LENS scoring always recomputes ranks in Python from raw metric values."
         )
 
-        st.subheader("Worked Example: Skewed Metric [100, 101, 5000]")
-        values = pd.Series([100.0, 101.0, 5000.0], index=["City A", "City B", "City C"])
+        st.subheader("Worked Example: Tie Handling [100, 100, 5000]")
+        values = pd.Series([100.0, 100.0, 5000.0], index=["City A", "City B", "City C"])
         example = pd.DataFrame({"city": values.index, "raw_value": values.values})
-        for method_key, method_label in [
-            (SCORING_METHOD_RANK, "rank"),
-            (SCORING_METHOD_PERCENTILE_RANK, "percentile_rank"),
-            (SCORING_METHOD_MINMAX, "minmax"),
-            (SCORING_METHOD_ROBUST_MINMAX, "robust_minmax"),
-            (SCORING_METHOD_LOG_ROBUST_MINMAX, "log_robust_minmax"),
-        ]:
-            scores = scoring.score_series(values, method=method_key, direction="higher")
-            example[method_label] = [float(scores.loc[idx]) for idx in values.index]
+        computed_ranks = scoring.compute_rank_series(values, direction="higher")
+        rank_scores = scoring.score_series(values, method=SCORING_METHOD_RANK, direction="higher")
+        percentile_scores = scoring.score_series(values, method=SCORING_METHOD_PERCENTILE, direction="higher")
+        example["computed_rank"] = [float(computed_ranks.loc[idx]) for idx in values.index]
+        example["rank_score"] = [float(rank_scores.loc[idx]) for idx in values.index]
+        example["percentile_index"] = [float(percentile_scores.loc[idx]) * 100.0 for idx in values.index]
 
         st.dataframe(model.format_table_for_display(example, decimals=4), use_container_width=True, hide_index=True)
         st.caption(
-            "Rank and Percentile Rank produce evenly spaced ordering-based scores. "
-            "Min-Max and Log + Robust Min-Max retain magnitude information differently."
+            "Rank stays ordinal, while Percentile reflects cumulative position in the adjusted raw-value distribution on a 0-100 basis."
         )
     else:
         st.subheader("Scoring Approach")
         st.write(
             "In Client mode, the app uses the configured scoring method in the background so results stay consistent "
-            "across pages. Switch to Advanced mode to view and compare scoring methods."
+            "across pages. Switch to Advanced mode to view or change the active Rank/Percentile method."
         )
 
     st.subheader("How to Interpret Outputs")
@@ -121,7 +94,7 @@ def render_page() -> None:
         """
 - Rankings are relative to the current set of cities and selected method.
 - Missing values are skipped in scoring; fully empty criteria are ignored with warnings.
-- For lower-is-better metrics, all methods invert scores so higher final score always means better.
+- For lower-is-better metrics, scores are inverted after ranking so higher final score always means better.
 - Use Client mode for decision communication and Advanced mode for technical audit.
 """
     )

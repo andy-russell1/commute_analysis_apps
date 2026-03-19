@@ -13,6 +13,7 @@ from apps.commute.logic import filter_travel_time_valid, match_columns
 from shared.runtime.downloads import df_to_csv_bytes
 from apps.isochrone.io import load_isochrones_from_zip, validate_isochrone_zip
 from shared.runtime.models import AppArtifacts, AppMetadata, AppPlugin, UploadPayload
+from shared.ui.kpi import render_kpi_strip
 from shared.ui.page_header import render_page_header
 
 
@@ -124,6 +125,13 @@ def _render_worker_kpis(
     benchmark_counts: dict[float, int],
     total_workers: int,
 ) -> None:
+    _render_worker_kpis_shell(
+        selected_counts=selected_counts,
+        benchmark_counts=benchmark_counts,
+        total_workers=total_workers,
+    )
+    return
+
     style = """
     <style>
     .iso-kpi-label {
@@ -208,6 +216,43 @@ def _render_worker_kpis(
                 ),
                 unsafe_allow_html=True,
             )
+
+def _render_worker_kpis_shell(
+    selected_counts: dict[float, int],
+    benchmark_counts: dict[float, int],
+    total_workers: int,
+) -> None:
+    band_meta = [
+        (30.0, "Workers within 30 min"),
+        (45.0, "Workers within 45 min"),
+        (60.0, "Workers within 60 min"),
+    ]
+    items: list[tuple[object, object, object]] = []
+
+    for threshold, label in band_meta:
+        current = int(selected_counts.get(threshold, 0))
+        benchmark = int(benchmark_counts.get(threshold, 0))
+        share = (float(current) / float(total_workers) * 100.0) if total_workers > 0 else 0.0
+        delta_pct = _delta_vs_benchmark_percent(current=current, benchmark=benchmark)
+
+        if delta_pct is None:
+            delta_text = "N/A vs benchmark"
+        elif delta_pct > 0:
+            delta_text = "+{0:.1f}% vs benchmark".format(delta_pct)
+        elif delta_pct < 0:
+            delta_text = "-{0:.1f}% vs benchmark".format(abs(delta_pct))
+        else:
+            delta_text = "0.0% vs benchmark"
+
+        items.append(
+            (
+                label,
+                "{0:,}".format(current),
+                "{0:.1f}% of workers | {1}".format(share, delta_text),
+            )
+        )
+
+    render_kpi_strip(items, columns=3)
 
 
 def _extract_combined_upload(zip_payload_bytes: bytes) -> tuple[str, bytes, str, bytes]:
@@ -717,7 +762,7 @@ class IsochroneCommutePlugin(AppPlugin):
             thresholds=TRAVEL_THRESHOLDS,
         )
 
-        _render_worker_kpis(
+        _render_worker_kpis_shell(
             selected_counts=counts,
             benchmark_counts=benchmark_counts,
             total_workers=total_workers,

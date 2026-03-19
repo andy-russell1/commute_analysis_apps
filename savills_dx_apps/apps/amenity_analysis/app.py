@@ -14,6 +14,7 @@ from apps.amenity_analysis.common import (
     set_embedded_mode,
 )
 from shared.ui.page_header import render_page_header
+from shared.ui.kpi import render_kpi_strip
 from shared.runtime.session import APP_KEY, STEP_KEY
 
 
@@ -26,10 +27,14 @@ st.write("Amenity KPI using OSM amenities and optional local NaPTAN transport da
 sites_df = st.session_state[SITES_DF_KEY]
 results_by_radius = st.session_state[RESULTS_BY_RADIUS_KEY]
 
-c1, c2, c3 = st.columns(3)
-c1.metric("Valid offices loaded", int(len(sites_df)))
-c2.metric("Radii analysed", int(len(results_by_radius)))
-c3.metric("Selected metrics", int(len(st.session_state[SELECTED_METRICS_KEY])))
+render_kpi_strip(
+    [
+        ("Valid offices loaded", int(len(sites_df))),
+        ("Radii analysed", int(len(results_by_radius))),
+        ("Selected metrics", int(len(st.session_state[SELECTED_METRICS_KEY]))),
+    ],
+    columns=3,
+)
 
 if st.session_state[ANALYSIS_MESSAGES_KEY]:
     st.warning("Some data sources returned warnings. Check Overview for details.")

@@ -1,0 +1,249 @@
+lad_code,lad_name,metric_family,metric_key,metric_label,period,value,unit,source_system,source_dataset,last_updated
+E09000002,Barking and Dagenham,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.775,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000003,Barnet,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.8029999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000004,Bexley,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.843,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000005,Brent,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.802,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000006,Bromley,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.833,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000007,Camden,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.774,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000001,City of London,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000008,Croydon,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.7879999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000009,Ealing,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.8270000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000010,Enfield,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.802,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000011,Greenwich,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.765,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000012,Hackney,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.809,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000013,Hammersmith and Fulham,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.742,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000014,Haringey,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.7509999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000016,Havering,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.8240000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000018,Hounslow,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.7909999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000019,Islington,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.8079999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000020,Kensington and Chelsea,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.6629999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000021,Kingston upon Thames,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.855,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000022,Lambeth,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.8390000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000023,Lewisham,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.7959999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000024,Merton,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.8340000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000025,Newham,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.7240000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000026,Redbridge,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.779,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000027,Richmond upon Thames,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.784,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000028,Southwark,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.769,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000029,Sutton,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.79,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000030,Tower Hamlets,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.7759999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000031,Waltham Forest,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.82,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000032,Wandsworth,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.86,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000033,Westminster,Labour Market,economic_activity_rate,Economic activity rate,Oct 2024-Sep 2025,0.815,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000002,Barking and Dagenham,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.713,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000003,Barnet,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.737,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000004,Bexley,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.8029999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000005,Brent,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.722,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000006,Bromley,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.805,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000007,Camden,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.753,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000001,City of London,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000008,Croydon,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.748,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000009,Ealing,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.775,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000010,Enfield,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.746,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000011,Greenwich,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.73,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000012,Hackney,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.7829999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000013,Hammersmith and Fulham,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.6990000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000014,Haringey,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.6990000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000016,Havering,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.795,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000018,Hounslow,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.748,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000019,Islington,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.763,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000020,Kensington and Chelsea,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.609,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000021,Kingston upon Thames,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.82,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000022,Lambeth,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.795,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000023,Lewisham,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.741,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000024,Merton,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.804,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000025,Newham,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.667,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000026,Redbridge,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.7190000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000027,Richmond upon Thames,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.737,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000028,Southwark,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.716,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000029,Sutton,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.743,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000030,Tower Hamlets,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.725,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000031,Waltham Forest,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.76,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000032,Wandsworth,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.8390000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000033,Westminster,Labour Market,employment_rate,Employment rate,Oct 2024-Sep 2025,0.7909999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000002,Barking and Dagenham,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.10400000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000003,Barnet,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.061,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000004,Bexley,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.06,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000005,Brent,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.10099999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000006,Bromley,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.068,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000007,Camden,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.064,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000001,City of London,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000008,Croydon,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.049,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000009,Ealing,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000010,Enfield,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.081,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000011,Greenwich,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.08900000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000012,Hackney,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.055,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000013,Hammersmith and Fulham,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000014,Haringey,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.061,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000016,Havering,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.035,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000018,Hounslow,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000019,Islington,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000020,Kensington and Chelsea,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000021,Kingston upon Thames,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.04,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000022,Lambeth,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000023,Lewisham,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.092,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000024,Merton,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.055,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000025,Newham,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.064,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000026,Redbridge,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.07200000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000027,Richmond upon Thames,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000028,Southwark,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000029,Sutton,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000030,Tower Hamlets,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.087,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000031,Waltham Forest,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,0.048,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000032,Wandsworth,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000033,Westminster,Qualifications,no_qualifications_share,No qualifications share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000002,Barking and Dagenham,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.467,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000003,Barnet,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.5770000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000004,Bexley,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.556,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000005,Brent,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.561,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000006,Bromley,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.535,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000007,Camden,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.672,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000001,City of London,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000008,Croydon,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.5920000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000009,Ealing,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.6829999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000010,Enfield,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.451,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000011,Greenwich,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.584,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000012,Hackney,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.609,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000013,Hammersmith and Fulham,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.754,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000014,Haringey,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.6970000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000016,Havering,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.486,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000018,Hounslow,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.608,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000019,Islington,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.784,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000020,Kensington and Chelsea,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.6459999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000021,Kingston upon Thames,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.5760000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000022,Lambeth,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.78,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000023,Lewisham,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.636,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000024,Merton,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.654,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000025,Newham,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.552,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000026,Redbridge,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.5479999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000027,Richmond upon Thames,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.6829999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000028,Southwark,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.6609999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000029,Sutton,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.6,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000030,Tower Hamlets,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.675,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000031,Waltham Forest,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.653,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000032,Wandsworth,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.706,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000033,Westminster,Qualifications,nvq4_plus_share,NVQ4+ share,Jan 2024-Dec 2024,0.698,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000002,Barking and Dagenham,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.18600000000000003,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000003,Barnet,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.39399999999999996,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000004,Bexley,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.276,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000005,Brent,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.273,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000006,Bromley,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.379,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000007,Camden,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.272,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000001,City of London,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000008,Croydon,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.24600000000000002,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000009,Ealing,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.39299999999999996,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000010,Enfield,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.212,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000011,Greenwich,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.413,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000012,Hackney,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.377,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000013,Hammersmith and Fulham,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.456,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000014,Haringey,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.40299999999999997,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000016,Havering,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.256,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000018,Hounslow,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.17600000000000002,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000019,Islington,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.43200000000000005,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000020,Kensington and Chelsea,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.327,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000021,Kingston upon Thames,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.376,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000022,Lambeth,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.371,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000023,Lewisham,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.35100000000000003,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000024,Merton,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.38,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000025,Newham,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.318,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000026,Redbridge,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.355,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000027,Richmond upon Thames,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.39899999999999997,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000028,Southwark,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.325,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000029,Sutton,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.32299999999999995,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000030,Tower Hamlets,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.35100000000000003,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000031,Waltham Forest,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.28,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000032,Wandsworth,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.41700000000000004,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000033,Westminster,Occupation Profile,professional_occupations_share,Professional occupations share,Oct 2024-Sep 2025,0.433,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000002,Barking and Dagenham,Population,total_population,Total population,2024,232747.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000003,Barnet,Population,total_population,Total population,2024,405050.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000004,Bexley,Population,total_population,Total population,2024,256434.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000005,Brent,Population,total_population,Total population,2024,352976.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000006,Bromley,Population,total_population,Total population,2024,335319.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000007,Camden,Population,total_population,Total population,2024,216943.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000001,City of London,Population,total_population,Total population,2024,15111.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000008,Croydon,Population,total_population,Total population,2024,409342.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000009,Ealing,Population,total_population,Total population,2024,385985.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000010,Enfield,Population,total_population,Total population,2024,327434.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000011,Greenwich,Population,total_population,Total population,2024,299528.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000012,Hackney,Population,total_population,Total population,2024,266758.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000013,Hammersmith and Fulham,Population,total_population,Total population,2024,188687.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000014,Haringey,Population,total_population,Total population,2024,263850.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000016,Havering,Population,total_population,Total population,2024,276274.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000018,Hounslow,Population,total_population,Total population,2024,299424.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000019,Islington,Population,total_population,Total population,2024,223024.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000020,Kensington and Chelsea,Population,total_population,Total population,2024,144518.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000021,Kingston upon Thames,Population,total_population,Total population,2024,172692.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000022,Lambeth,Population,total_population,Total population,2024,316920.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000023,Lewisham,Population,total_population,Total population,2024,301255.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000024,Merton,Population,total_population,Total population,2024,218539.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000025,Newham,Population,total_population,Total population,2024,374523.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000026,Redbridge,Population,total_population,Total population,2024,321231.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000027,Richmond upon Thames,Population,total_population,Total population,2024,196678.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000028,Southwark,Population,total_population,Total population,2024,314786.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000029,Sutton,Population,total_population,Total population,2024,214525.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000030,Tower Hamlets,Population,total_population,Total population,2024,331886.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000031,Waltham Forest,Population,total_population,Total population,2024,279737.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000032,Wandsworth,Population,total_population,Total population,2024,337655.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000033,Westminster,Population,total_population,Total population,2024,209996.0,persons,Nomis,pestnew,2025-07-30T09:30:00
+E09000002,Barking and Dagenham,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.08,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000003,Barnet,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.08199999999999999,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000004,Bexley,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.048,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000005,Brent,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.1,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000006,Bromley,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000007,Camden,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000001,City of London,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000008,Croydon,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000009,Ealing,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.063,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000010,Enfield,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000011,Greenwich,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000012,Hackney,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000013,Hammersmith and Fulham,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.057999999999999996,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000014,Haringey,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.069,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000016,Havering,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.036000000000000004,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000018,Hounslow,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000019,Islington,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000020,Kensington and Chelsea,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000021,Kingston upon Thames,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.042,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000022,Lambeth,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.053,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000023,Lewisham,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.07,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000024,Merton,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.037000000000000005,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000025,Newham,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.079,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000026,Redbridge,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.077,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000027,Richmond upon Thames,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.059000000000000004,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000028,Southwark,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.069,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000029,Sutton,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.06,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000030,Tower Hamlets,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.066,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000031,Waltham Forest,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,0.07200000000000001,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000032,Wandsworth,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000033,Westminster,Labour Market,unemployment_rate,Unemployment rate,Oct 2024-Sep 2025,,proportion,Nomis,apsnew,2026-01-20T07:00:00
+E09000002,Barking and Dagenham,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,143700.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000003,Barnet,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,261000.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000004,Bexley,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,162500.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000005,Brent,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,226500.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000006,Bromley,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,216700.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000007,Camden,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,191900.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000001,City of London,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000008,Croydon,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,255600.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000009,Ealing,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,223900.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000010,Enfield,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,226300.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000011,Greenwich,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,201000.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000012,Hackney,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,215200.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000013,Hammersmith and Fulham,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,126900.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000014,Haringey,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,198000.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000016,Havering,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,164300.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000018,Hounslow,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,183500.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000019,Islington,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,182000.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000020,Kensington and Chelsea,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,105700.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000021,Kingston upon Thames,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,123600.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000022,Lambeth,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,243500.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000023,Lewisham,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,229200.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000024,Merton,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,141800.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000025,Newham,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,258300.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000026,Redbridge,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,207000.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000027,Richmond upon Thames,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,129700.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000028,Southwark,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,240700.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000029,Sutton,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,136100.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000030,Tower Hamlets,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,247100.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000031,Waltham Forest,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,193200.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000032,Wandsworth,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,236900.0,persons,Nomis,apsnew,2026-01-20T07:00:00
+E09000033,Westminster,Population,working_age_population,Working-age population,Oct 2024-Sep 2025,179400.0,persons,Nomis,apsnew,2026-01-20T07:00:00

@@ -1,0 +1,22 @@
+{
+  "pack_name": "Talent Analytics Shared Data Pack",
+  "created_on": "2026-03-19",
+  "client": null,
+  "scope": "Shared geography and public-data demographics only. Private client packs are intentionally excluded from the public repository.",
+  "analysis_period": "Jan 2025 - Feb 2026",
+  "shared_files": [
+    "shared/lad_uk_2024.geojson",
+    "shared/london_custom_groups.geojson",
+    "shared/geography_group_lookup.csv",
+    "shared/geography/custom_geography_lookup.csv",
+    "shared/ons/processed/demographics_by_lad.csv",
+    "shared/ons/processed/demographics_by_custom_geography.csv",
+    "shared/ons/processed/demographics_metadata.csv"
+  ],
+  "client_files": [],
+  "notes": [
+    "private client-specific Lightcast packs are extracted to a separate zip archive before publication",
+    "parent SOC bridge was intentionally omitted from the final pack because the uploaded evidence did not contain an explicit machine-readable hierarchy mapping",
+    "shared demographics are sourced from live Nomis / ONS preprocessing outputs keyed to the canonical custom geography lookup"
+  ]
+}

@@ -1,0 +1,32 @@
+custom_geography_key,custom_geography_name,lad_code,lad_name
+camden_city,Camden and City of London,E09000007,Camden
+camden_city,Camden and City of London,E09000001,City of London
+westminster,Westminster,E09000033,Westminster
+hounslow_richmond,Hounslow and Richmond upon Thames,E09000018,Hounslow
+hounslow_richmond,Hounslow and Richmond upon Thames,E09000027,Richmond upon Thames
+merton_kingston_sutton,Merton Kingston upon Thames and Sutton,E09000024,Merton
+merton_kingston_sutton,Merton Kingston upon Thames and Sutton,E09000021,Kingston upon Thames
+merton_kingston_sutton,Merton Kingston upon Thames and Sutton,E09000029,Sutton
+croydon,Croydon,E09000008,Croydon
+haringey_islington,Haringey and Islington,E09000014,Haringey
+haringey_islington,Haringey and Islington,E09000019,Islington
+tower_hamlets,Tower Hamlets,E09000030,Tower Hamlets
+lewisham_southwark,Lewisham and Southwark,E09000023,Lewisham
+lewisham_southwark,Lewisham and Southwark,E09000028,Southwark
+kensington_hammersmith,Kensington and Chelsea and Hammersmith and Fulham,E09000020,Kensington and Chelsea
+kensington_hammersmith,Kensington and Chelsea and Hammersmith and Fulham,E09000013,Hammersmith and Fulham
+bromley,Bromley,E09000006,Bromley
+barking_havering,Barking and Dagenham and Havering,E09000002,Barking and Dagenham
+barking_havering,Barking and Dagenham and Havering,E09000016,Havering
+hackney_newham,Hackney and Newham,E09000012,Hackney
+hackney_newham,Hackney and Newham,E09000025,Newham
+bexley_greenwich,Bexley and Greenwich,E09000004,Bexley
+bexley_greenwich,Bexley and Greenwich,E09000011,Greenwich
+enfield,Enfield,E09000010,Enfield
+ealing,Ealing,E09000009,Ealing
+barnet,Barnet,E09000003,Barnet
+redbridge_waltham_forest,Redbridge and Waltham Forest,E09000026,Redbridge
+redbridge_waltham_forest,Redbridge and Waltham Forest,E09000031,Waltham Forest
+brent,Brent,E09000005,Brent
+lambeth,Lambeth,E09000022,Lambeth
+wandsworth,Wandsworth,E09000032,Wandsworth

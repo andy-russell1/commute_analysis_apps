@@ -3,6 +3,7 @@ from __future__ import annotations
 import streamlit as st
 
 from apps.lens.common import get_embedded_route, init_lens_state, set_embedded_mode
+from apps.lens.benchmarking_view import render_page as render_benchmarking_page
 from apps.lens.export_view import render_page as render_export_page
 from apps.lens.home_view import render_page as render_home_page
 from apps.lens.matrix_view import render_page as render_matrix_page
@@ -15,6 +16,7 @@ _ROUTES = {
     "app": render_home_page,
     "weights": render_weights_page,
     "results": render_results_page,
+    "benchmarking": render_benchmarking_page,
     "matrix": render_matrix_page,
     "export": render_export_page,
     "methodology": render_methodology_page,

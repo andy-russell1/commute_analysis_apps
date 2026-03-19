@@ -15,27 +15,19 @@ CRITERIA_COLUMN_NAMES = [
 DATA_BASE_COLUMNS = ["macro", "major", "micro", "source"]
 
 SCORING_METHOD_RANK = "rank"
-SCORING_METHOD_PERCENTILE_RANK = "percentile_rank"
+SCORING_METHOD_PERCENTILE = "percentile"
+SCORING_METHOD_PERCENTILE_RANK = SCORING_METHOD_PERCENTILE
 SCORING_METHOD_MINMAX = "minmax"
 SCORING_METHOD_ROBUST_MINMAX = "robust_minmax"
 SCORING_METHOD_LOG_ROBUST_MINMAX = "log_robust_minmax"
 
 SCORING_METHOD_LABELS = {
     "Rank": SCORING_METHOD_RANK,
-    "Percentile Rank": SCORING_METHOD_PERCENTILE_RANK,
-    "Min-Max": SCORING_METHOD_MINMAX,
-    "Robust Min-Max": SCORING_METHOD_ROBUST_MINMAX,
-    "Log + Robust Min-Max": SCORING_METHOD_LOG_ROBUST_MINMAX,
+    "Percentile": SCORING_METHOD_PERCENTILE,
 }
 
-SCORING_METHOD_CLIENT_LABELS = ["Rank", "Percentile Rank"]
-SCORING_METHOD_ADVANCED_LABELS = [
-    "Rank",
-    "Percentile Rank",
-    "Min-Max",
-    "Robust Min-Max",
-    "Log + Robust Min-Max",
-]
+SCORING_METHOD_CLIENT_LABELS = ["Rank", "Percentile"]
+SCORING_METHOD_ADVANCED_LABELS = ["Rank", "Percentile"]
 
 MODE_CLIENT = "Client"
 MODE_ADVANCED = "Advanced"
@@ -57,10 +49,8 @@ WEIGHTING_MODE_HELP = (
 )
 
 SCORING_METHOD_HELP = (
-    "Rank / Percentile Rank: ordering-based; ignores magnitude spacing.\n"
-    "Min-Max: magnitude-aware; sensitive to outliers.\n"
-    "Robust Min-Max: magnitude-aware; less sensitive to outliers.\n"
-    "Log + Robust Min-Max: best for right-skewed metrics."
+    "Rank: Python-computed competition ranks from raw metric values; ties share the same rank.\n"
+    "Percentile: Python-computed ECDF percentile from direction-adjusted raw metric values, presented on a 0-100 indexed basis."
 )
 
 MACRO_PRESET_TARGETS = {

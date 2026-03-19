@@ -21,6 +21,7 @@ from apps.commute.metrics import (
 from shared.runtime.downloads import df_to_csv_bytes
 from shared.runtime.models import AppArtifacts, AppMetadata, AppPlugin, UploadPayload
 from shared.runtime.paths import LOGO_DIR
+from shared.ui.kpi import render_kpi_strip
 
 
 BEST_LABEL = "Best"
@@ -38,6 +39,10 @@ MODE_EMISSIONS_KGCO2E_PER_KM = {
     "public_transport": PUBLIC_TRANSPORT_EMISSIONS_KGCO2E_PER_KM,
     "driving+train": DRIVING_TRAIN_EMISSIONS_KGCO2E_PER_KM,
 }
+
+
+def _render_commute_kpi_strip(items: list[tuple[object, object]], *, columns: int = 4) -> None:
+    render_kpi_strip(items, columns=columns)
 COMMUTE_COLOR_SCALE = [
     [0.0, "#1e8449"],  # low travel time
     [0.5, "#f1c40f"],  # midpoint = yellow/amber
@@ -805,10 +810,7 @@ class CommutePlugin(AppPlugin):
             st.subheader("Office comparison")
             st.markdown('<div class="kpi-block">', unsafe_allow_html=True)
             if not stats_df.empty:
-                col1, col2, col3, col4 = st.columns(4)
-
                 sample_size = len(emp_tbl)
-                col2.metric("Sample Size", "{0:,}".format(int(sample_size)))
 
                 if kpi_mode == "Emissions":
                     valid_emissions = emissions_stats.dropna(subset=["Avg (kgCO2e)"])
@@ -817,7 +819,6 @@ class CommutePlugin(AppPlugin):
                         best_office = valid_emissions[valid_emissions["Avg (kgCO2e)"] == best_emissions][
                             "Office"
                         ].values[0]
-                        col1.metric("Lowest Emissions Office", "{0}".format(best_office))
 
                         baseline_series = valid_emissions[
                             valid_emissions["officeID"].astype(str) == str(minimum_median_office_id)
@@ -825,40 +826,49 @@ class CommutePlugin(AppPlugin):
                         current_series = valid_emissions[valid_emissions["officeID"].astype(str) == str(office_id)][
                             "Avg (kgCO2e)"
                         ]
+                        average_value = "N/A"
                         if not current_series.empty:
-                            col3.metric("Average kgCO2e", "{0:.2f} kg".format(float(current_series.iloc[0])))
-                        else:
-                            col3.metric("Average kgCO2e", "N/A")
+                            average_value = "{0:.2f} kg".format(float(current_series.iloc[0]))
+                        delta_display = "N/A"
                         if not baseline_series.empty and not current_series.empty:
                             delta_value = float(current_series.iloc[0] - best_emissions)#baseline_series.iloc[0])
-                            col4.metric(
-                                "∆ Best Performing Office",
-                                "{0:+.2f} kg".format(delta_value),
-                            )
-                        else:
-                            col4.metric("∆ Best Performing Office", "N/A")
+                            delta_display = "{0:+.2f} kg".format(delta_value)
+                        _render_commute_kpi_strip(
+                            [
+                                ("Lowest Emissions Office", "{0}".format(best_office)),
+                                ("Sample Size", "{0:,}".format(int(sample_size))),
+                                ("Average kgCO2e", average_value),
+                                ("∆ Best Performing Office", delta_display),
+                            ]
+                        )
                     else:
-                        col1.metric("Lowest Emissions Office", "N/A")
-                        col3.metric("Average kgCO2e", "N/A")
-                        col4.metric("∆ Best Performing Office", "N/A")
+                        _render_commute_kpi_strip(
+                            [
+                                ("Lowest Emissions Office", "N/A"),
+                                ("Sample Size", "{0:,}".format(int(sample_size))),
+                                ("Average kgCO2e", "N/A"),
+                                ("∆ Best Performing Office", "N/A"),
+                            ]
+                        )
                 else:
                     best_median = stats_df["Median (mins)"].min()
                     best_office = stats_df[stats_df["Median (mins)"] == best_median]["Office"].values[0]
                     avg_median = stats_df["Median (mins)"].mean()
                     minimum_median = best_median
 
-                    col1.metric("Best Performing Office", "{0}".format(best_office))
-                    col3.metric("Average Median Time", "{0:.1f} min".format(avg_median))
-
+                    delta_display = "N/A"
                     current_median = stats_df[stats_df["officeID"].astype(str) == str(office_id)]["Median (mins)"].values
                     if len(current_median) > 0 and minimum_median is not None:
                         delta_value = current_median[0] - minimum_median
-                        col4.metric(
-                            "∆ Best Performing Office",
-                            "{0:+.1f} min".format(delta_value),
-                        )
-                    else:
-                        col4.metric("∆ Best Performing Office", "N/A")
+                        delta_display = "{0:+.1f} min".format(delta_value)
+                    _render_commute_kpi_strip(
+                        [
+                            ("Best Performing Office", "{0}".format(best_office)),
+                            ("Sample Size", "{0:,}".format(int(sample_size))),
+                            ("Average Median Time", "{0:.1f} min".format(avg_median)),
+                            ("∆ Best Performing Office", delta_display),
+                        ]
+                    )
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div class="print-map">', unsafe_allow_html=True)
@@ -937,9 +947,6 @@ class CommutePlugin(AppPlugin):
                     max_time=max_time,
                 )
                 sample_size = len(emp_tbl)
-                col1, col2, col3, col4 = st.columns(4)
-
-                col2.metric("Sample Size", "{0:,}".format(int(sample_size)))
 
                 if kpi_mode == "Emissions":
                     valid_emissions = emissions_stats.dropna(subset=["Avg (kgCO2e)"])
@@ -948,7 +955,6 @@ class CommutePlugin(AppPlugin):
                         best_office = valid_emissions[valid_emissions["Avg (kgCO2e)"] == best_emissions][
                             "Office"
                         ].values[0]
-                        col1.metric("Lowest Emissions Office", "{0}".format(best_office))
 
                         baseline_series = valid_emissions[
                             valid_emissions["officeID"].astype(str) == str(minimum_median_office_id)
@@ -956,40 +962,49 @@ class CommutePlugin(AppPlugin):
                         current_series = valid_emissions[valid_emissions["officeID"].astype(str) == str(office_id)][
                             "Avg (kgCO2e)"
                         ]
+                        average_value = "N/A"
                         if not current_series.empty:
-                            col3.metric("Average kgCO2e", "{0:.2f} kg".format(float(current_series.iloc[0])))
-                        else:
-                            col3.metric("Average kgCO2e", "N/A")
+                            average_value = "{0:.2f} kg".format(float(current_series.iloc[0]))
+                        delta_display = "N/A"
                         if not baseline_series.empty and not current_series.empty:
                             delta_value = float(current_series.iloc[0] - baseline_series.iloc[0])
-                            col4.metric(
-                                "∆ Best Performing Office",
-                                "{0:+.2f} kg".format(delta_value),
-                            )
-                        else:
-                            col4.metric("∆ Best Performing Office", "N/A")
+                            delta_display = "{0:+.2f} kg".format(delta_value)
+                        _render_commute_kpi_strip(
+                            [
+                                ("Lowest Emissions Office", "{0}".format(best_office)),
+                                ("Sample Size", "{0:,}".format(int(sample_size))),
+                                ("Average kgCO2e", average_value),
+                                ("∆ Best Performing Office", delta_display),
+                            ]
+                        )
                     else:
-                        col1.metric("Lowest Emissions Office", "N/A")
-                        col3.metric("Average kgCO2e", "N/A")
-                        col4.metric("∆ Best Performing Office", "N/A")
+                        _render_commute_kpi_strip(
+                            [
+                                ("Lowest Emissions Office", "N/A"),
+                                ("Sample Size", "{0:,}".format(int(sample_size))),
+                                ("Average kgCO2e", "N/A"),
+                                ("∆ Best Performing Office", "N/A"),
+                            ]
+                        )
                 else:
                     best_median = stats_df["Median (mins)"].min()
                     best_office = stats_df[stats_df["Median (mins)"] == best_median]["Office"].values[0]
                     avg_median = stats_df["Median (mins)"].mean()
                     minimum_median = best_median
 
-                    col1.metric("Best Performing Office", "{0}".format(best_office))
-                    col3.metric("Average Median Time", "{0:.1f} min".format(avg_median))
-
+                    delta_display = "N/A"
                     current_median = stats_df[stats_df["officeID"].astype(str) == str(office_id)]["Median (mins)"].values
                     if len(current_median) > 0 and minimum_median is not None:
                         delta_value = current_median[0] - minimum_median
-                        col4.metric(
-                            "∆ Best Performing Office",
-                            "{0:+.1f} min".format(delta_value),
-                        )
-                    else:
-                        col4.metric("∆ Best Performing Office", "N/A")
+                        delta_display = "{0:+.1f} min".format(delta_value)
+                    _render_commute_kpi_strip(
+                        [
+                            ("Best Performing Office", "{0}".format(best_office)),
+                            ("Sample Size", "{0:,}".format(int(sample_size))),
+                            ("Average Median Time", "{0:.1f} min".format(avg_median)),
+                            ("∆ Best Performing Office", delta_display),
+                        ]
+                    )
 
             st.divider()
 

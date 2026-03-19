@@ -27,6 +27,7 @@ from shared.scoring.amenity_index import (
     normalise_counts,
     normalise_weights,
 )
+from shared.ui.kpi import render_kpi_strip
 
 try:
     import pydeck as pdk
@@ -1220,10 +1221,14 @@ def render_comparison_panel(
     b_score = float(row_b.get("total_score", np.nan))
     delta = a_score - b_score
 
-    m1, m2, m3 = st.columns(3)
-    m1.metric(office_a_name, f"{a_score:.1f}")
-    m2.metric(office_b_name, f"{b_score:.1f}")
-    m3.metric(f"Delta ({office_a_name} - {office_b_name})", f"{delta:+.1f}")
+    render_kpi_strip(
+        [
+            (office_a_name, f"{a_score:.1f}"),
+            (office_b_name, f"{b_score:.1f}"),
+            (f"Delta ({office_a_name} - {office_b_name})", f"{delta:+.1f}"),
+        ],
+        columns=3,
+    )
 
     delta_rows: list[dict[str, Any]] = []
     for category in selected_categories:

@@ -1,0 +1,32 @@
+custom_geography_key,custom_geography_name,display_order,lad_code,lad_name,geography_level,is_active
+camden_city,Camden and City of London,1,E09000007,Camden,custom_group_london_borough,TRUE
+camden_city,Camden and City of London,1,E09000001,City of London,custom_group_london_borough,TRUE
+westminster,Westminster,2,E09000033,Westminster,custom_group_london_borough,TRUE
+hounslow_richmond,Hounslow and Richmond upon Thames,3,E09000018,Hounslow,custom_group_london_borough,TRUE
+hounslow_richmond,Hounslow and Richmond upon Thames,3,E09000027,Richmond upon Thames,custom_group_london_borough,TRUE
+merton_kingston_sutton,Merton Kingston upon Thames and Sutton,4,E09000024,Merton,custom_group_london_borough,TRUE
+merton_kingston_sutton,Merton Kingston upon Thames and Sutton,4,E09000021,Kingston upon Thames,custom_group_london_borough,TRUE
+merton_kingston_sutton,Merton Kingston upon Thames and Sutton,4,E09000029,Sutton,custom_group_london_borough,TRUE
+croydon,Croydon,5,E09000008,Croydon,custom_group_london_borough,TRUE
+haringey_islington,Haringey and Islington,6,E09000014,Haringey,custom_group_london_borough,TRUE
+haringey_islington,Haringey and Islington,6,E09000019,Islington,custom_group_london_borough,TRUE
+tower_hamlets,Tower Hamlets,7,E09000030,Tower Hamlets,custom_group_london_borough,TRUE
+lewisham_southwark,Lewisham and Southwark,8,E09000023,Lewisham,custom_group_london_borough,TRUE
+lewisham_southwark,Lewisham and Southwark,8,E09000028,Southwark,custom_group_london_borough,TRUE
+kensington_hammersmith,Kensington and Chelsea and Hammersmith and Fulham,9,E09000020,Kensington and Chelsea,custom_group_london_borough,TRUE
+kensington_hammersmith,Kensington and Chelsea and Hammersmith and Fulham,9,E09000013,Hammersmith and Fulham,custom_group_london_borough,TRUE
+bromley,Bromley,10,E09000006,Bromley,custom_group_london_borough,TRUE
+barking_havering,Barking and Dagenham and Havering,11,E09000002,Barking and Dagenham,custom_group_london_borough,TRUE
+barking_havering,Barking and Dagenham and Havering,11,E09000016,Havering,custom_group_london_borough,TRUE
+hackney_newham,Hackney and Newham,12,E09000012,Hackney,custom_group_london_borough,TRUE
+hackney_newham,Hackney and Newham,12,E09000025,Newham,custom_group_london_borough,TRUE
+bexley_greenwich,Bexley and Greenwich,13,E09000004,Bexley,custom_group_london_borough,TRUE
+bexley_greenwich,Bexley and Greenwich,13,E09000011,Greenwich,custom_group_london_borough,TRUE
+enfield,Enfield,14,E09000010,Enfield,custom_group_london_borough,TRUE
+ealing,Ealing,15,E09000009,Ealing,custom_group_london_borough,TRUE
+barnet,Barnet,16,E09000003,Barnet,custom_group_london_borough,TRUE
+redbridge_waltham_forest,Redbridge and Waltham Forest,17,E09000026,Redbridge,custom_group_london_borough,TRUE
+redbridge_waltham_forest,Redbridge and Waltham Forest,17,E09000031,Waltham Forest,custom_group_london_borough,TRUE
+brent,Brent,18,E09000005,Brent,custom_group_london_borough,TRUE
+lambeth,Lambeth,19,E09000022,Lambeth,custom_group_london_borough,TRUE
+wandsworth,Wandsworth,20,E09000032,Wandsworth,custom_group_london_borough,TRUE

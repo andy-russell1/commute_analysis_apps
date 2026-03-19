@@ -20,7 +20,7 @@ streamlit run app/app.py
 - Hierarchical weighted rollups (micro -> major -> macro -> overall)
 - Client-friendly dashboard with city drilldown
 - Advanced model editing (hierarchy weights + direction overrides)
-- Data matrix tabs (`Computed Ranks`, `Scores`, `Raw (units vary)`)
+- Data matrix tabs (`Computed Ranks`, `Score Index (0-100)`, `Raw (units vary)`)
 - CSV and Excel export
 - Methodology & Glossary page
 

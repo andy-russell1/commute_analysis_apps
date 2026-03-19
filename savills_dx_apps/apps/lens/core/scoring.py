@@ -10,7 +10,7 @@ from .constants import (
     DIRECTION_LOWER,
     SCORING_METHOD_LOG_ROBUST_MINMAX,
     SCORING_METHOD_MINMAX,
-    SCORING_METHOD_PERCENTILE_RANK,
+    SCORING_METHOD_PERCENTILE,
     SCORING_METHOD_RANK,
     SCORING_METHOD_ROBUST_MINMAX,
 )
@@ -32,11 +32,18 @@ def normalize_direction(direction: str | None) -> str:
 
 def normalize_scoring_method_key(method: str | None) -> str:
     normalized = (method or SCORING_METHOD_RANK).strip().lower()
-    if normalized == "percentile":
-        return SCORING_METHOD_PERCENTILE_RANK
+    alias_map = {
+        "rank": SCORING_METHOD_RANK,
+        "competition_rank": SCORING_METHOD_RANK,
+        "percentile": SCORING_METHOD_PERCENTILE,
+        "percentile rank": SCORING_METHOD_PERCENTILE,
+        "percentile_rank": SCORING_METHOD_PERCENTILE,
+    }
+    if normalized in alias_map:
+        return alias_map[normalized]
     if normalized in {
         SCORING_METHOD_RANK,
-        SCORING_METHOD_PERCENTILE_RANK,
+        SCORING_METHOD_PERCENTILE,
         SCORING_METHOD_MINMAX,
         SCORING_METHOD_ROBUST_MINMAX,
         SCORING_METHOD_LOG_ROBUST_MINMAX,
@@ -56,14 +63,21 @@ def normalize_weight_map(weight_map: dict[str, float]) -> dict[str, float]:
     return {k: v / total for k, v in cleaned.items()}
 
 
-def _rank_average_ascending(values: pd.Series) -> pd.Series:
+def _direction_adjusted_values(values: pd.Series, direction: str) -> pd.Series:
     numeric = pd.to_numeric(values, errors="coerce")
-    return numeric.rank(method="average", ascending=True, na_option="keep")
+    if normalize_direction(direction) == DIRECTION_LOWER:
+        return -numeric
+    return numeric
 
 
-def _rank_average_descending(values: pd.Series) -> pd.Series:
+def _rank_competition_ascending(values: pd.Series) -> pd.Series:
     numeric = pd.to_numeric(values, errors="coerce")
-    return numeric.rank(method="average", ascending=False, na_option="keep")
+    return numeric.rank(method="min", ascending=True, na_option="keep")
+
+
+def _rank_competition_descending(values: pd.Series) -> pd.Series:
+    numeric = pd.to_numeric(values, errors="coerce")
+    return numeric.rank(method="min", ascending=False, na_option="keep")
 
 
 def _rank_to_unit_interval(rank_series: pd.Series) -> pd.Series:
@@ -72,23 +86,32 @@ def _rank_to_unit_interval(rank_series: pd.Series) -> pd.Series:
     n = int(valid_mask.sum())
     if n == 0:
         return output
-    if n == 1:
+    valid_ranks = rank_series.loc[valid_mask]
+    if n == 1 or valid_ranks.nunique(dropna=True) == 1:
         output.loc[valid_mask] = 0.5
         return output
-    output.loc[valid_mask] = (rank_series.loc[valid_mask] - 1.0) / float(n - 1)
+    output.loc[valid_mask] = (valid_ranks - 1.0) / float(n - 1)
     return output.clip(0.0, 1.0)
 
 
 def rank_scores(values: pd.Series) -> pd.Series:
-    """Rank scores in [0,1] using average rank with ties; 0=worst, 1=best."""
-    ascending_rank = _rank_average_ascending(values)
+    """Rank scores in [0,1] using competition rank; 0=worst, 1=best."""
+    ascending_rank = _rank_competition_ascending(values)
     return _rank_to_unit_interval(ascending_rank)
 
 
-def percentile_rank_scores(values: pd.Series) -> pd.Series:
-    """Percentile rank defined as normalized average rank in [0,1]."""
-    ascending_rank = _rank_average_ascending(values)
-    return _rank_to_unit_interval(ascending_rank)
+def percentile_rank_scores(values: pd.Series, direction: str) -> pd.Series:
+    """Percentile scores in [0,1] from the ECDF of direction-adjusted raw values."""
+    adjusted = _direction_adjusted_values(values, direction=direction)
+    output = pd.Series(np.nan, index=adjusted.index, dtype=float)
+    valid = adjusted.dropna()
+    if valid.empty:
+        return output
+    if valid.nunique(dropna=True) == 1:
+        output.loc[valid.index] = 0.5
+        return output
+    output.loc[valid.index] = valid.rank(method="max", ascending=True, pct=True)
+    return output.clip(0.0, 1.0)
 
 
 def _minmax_scale(values: pd.Series) -> pd.Series:
@@ -173,8 +196,8 @@ def score_series(
 
     if method_key == SCORING_METHOD_RANK:
         scores = rank_scores(values)
-    elif method_key == SCORING_METHOD_PERCENTILE_RANK:
-        scores = percentile_rank_scores(values)
+    elif method_key == SCORING_METHOD_PERCENTILE:
+        scores = percentile_rank_scores(values, direction=direction_key)
     elif method_key == SCORING_METHOD_MINMAX:
         scores = minmax_scores(values)
     elif method_key == SCORING_METHOD_ROBUST_MINMAX:
@@ -184,7 +207,7 @@ def score_series(
     else:
         raise ValueError(f"Unknown scoring method: {method}")
 
-    if direction_key == DIRECTION_LOWER:
+    if direction_key == DIRECTION_LOWER and method_key != SCORING_METHOD_PERCENTILE:
         scores = 1.0 - scores
     return scores.clip(0.0, 1.0)
 
@@ -192,8 +215,8 @@ def score_series(
 def compute_rank_series(values: pd.Series, direction: str) -> pd.Series:
     direction_key = normalize_direction(direction)
     if direction_key == DIRECTION_LOWER:
-        return _rank_average_ascending(values)
-    return _rank_average_descending(values)
+        return _rank_competition_ascending(values)
+    return _rank_competition_descending(values)
 
 
 def compute_micro_scores(

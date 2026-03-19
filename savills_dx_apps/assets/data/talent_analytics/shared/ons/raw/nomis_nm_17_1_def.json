@@ -1,0 +1,150 @@
+{
+  "structure": {
+    "header": {
+      "id": "NM_17_1",
+      "prepared": "2026-03-19T16:25:27Z",
+      "sender": {
+        "contact": {
+          "email": "labour.market@ons.gov.uk",
+          "name": "Labour Market Statistics Helpline"
+        },
+        "id": "NOMIS"
+      },
+      "test": "false"
+    },
+    "keyfamilies": {
+      "keyfamily": [
+        {
+          "agencyid": "NOMIS",
+          "annotations": {
+            "annotation": [
+              {
+                "annotationtext": "Current (being actively updated)",
+                "annotationtitle": "Status"
+              },
+              {
+                "annotationtext": "Employment,Unemployment,Occupation,Industry,Qualification,Ethnic,Disability,Country of Birth,Hours Worked,Full-time,Part-time,Self-employed,Sex,Age",
+                "annotationtitle": "Keywords"
+              },
+              {
+                "annotationtext": "Persons",
+                "annotationtitle": "Units"
+              },
+              {
+                "annotationtext": "aps",
+                "annotationtitle": "contenttype/sources"
+              },
+              {
+                "annotationtext": "previously unavailable",
+                "annotationtitle": "SubDescription"
+              },
+              {
+                "annotationtext": "apsnew",
+                "annotationtitle": "Mnemonic"
+              },
+              {
+                "annotationtext": "2006-03-29 09:30:00",
+                "annotationtitle": "FirstReleased"
+              },
+              {
+                "annotationtext": "2026-01-20 07:00:00",
+                "annotationtitle": "LastUpdated"
+              },
+              {
+                "annotationtext": "2023-01-27 10:00:00",
+                "annotationtitle": "LastRevised"
+              }
+            ]
+          },
+          "id": "NM_17_1",
+          "components": {
+            "attribute": [
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Observation",
+                "codelist": "CL_OBS_STATUS",
+                "conceptref": "OBS_STATUS"
+              },
+              {
+                "assignmentstatus": "Conditional",
+                "attachmentlevel": "Observation",
+                "codelist": "CL_OBS_CONF",
+                "conceptref": "OBS_CONF"
+              },
+              {
+                "assignmentstatus": "Conditional",
+                "attachmentlevel": "Observation",
+                "codelist": "CL_OBS_ROUND",
+                "conceptref": "OBS_ROUND"
+              },
+              {
+                "assignmentstatus": "Conditional",
+                "attachmentlevel": "Series",
+                "codelist": "CL_UNIT_MULT",
+                "conceptref": "UNIT_MULTIPLIER"
+              },
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Series",
+                "codelist": "CL_TIME_FORMAT",
+                "conceptref": "TIME_FORMAT"
+              },
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Series",
+                "codelist": "CL_UNIT",
+                "conceptref": "UNIT"
+              },
+              {
+                "assignmentstatus": "Mandatory",
+                "attachmentlevel": "Series",
+                "conceptref": "TITLE_COMPL"
+              }
+            ],
+            "dimension": [
+              {
+                "codelist": "CL_17_1_GEOGRAPHY",
+                "conceptref": "GEOGRAPHY"
+              },
+              {
+                "codelist": "CL_17_1_CELL",
+                "conceptref": "CELL"
+              },
+              {
+                "codelist": "CL_17_1_MEASURES",
+                "conceptref": "MEASURES"
+              },
+              {
+                "codelist": "CL_17_1_FREQ",
+                "conceptref": "FREQ",
+                "isfrequencydimension": "true"
+              }
+            ],
+            "primarymeasure": {
+              "conceptref": "OBS_VALUE"
+            },
+            "timedimension": {
+              "codelist": "CL_17_1_TIME",
+              "conceptref": "TIME"
+            }
+          },
+          "description": {
+            "value": "A residence based labour market survey encompassing population, economic activity (employment and unemployment), economic inactivity and qualifications. These are broken down where possible by gender, age, ethnicity, industry and occupation. Available at Local Authority level and above. Updated quarterly.",
+            "lang": "en"
+          },
+          "name": {
+            "value": "annual population survey",
+            "lang": "en"
+          },
+          "uri": "Nm-17d1",
+          "version": 1.0
+        }
+      ]
+    },
+    "xmlns": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/message",
+    "common": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/common",
+    "structure": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/structure",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "schemalocation": "http://sdmx.org/docs/2_0/SDMXMessage.xsd"
+  }
+}

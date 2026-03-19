@@ -1,0 +1,104 @@
+{
+  "structure": {
+    "codelists": {
+      "codelist": [
+        {
+          "agencyid": "NOMIS",
+          "id": "CL_31_1_SEX",
+          "code": [
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "sex",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 7,
+              "description": {
+                "value": "Male",
+                "lang": "en"
+              },
+              "value": 5
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "sex",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "parentcode": 7,
+              "description": {
+                "value": "Female",
+                "lang": "en"
+              },
+              "value": 6
+            },
+            {
+              "annotations": {
+                "annotation": [
+                  {
+                    "annotationtext": "True",
+                    "annotationtitle": "IsTotal"
+                  },
+                  {
+                    "annotationtext": "True",
+                    "annotationtitle": "IsDefault"
+                  },
+                  {
+                    "annotationtext": "sex",
+                    "annotationtitle": "TypeName"
+                  },
+                  {
+                    "annotationtext": 0,
+                    "annotationtitle": "TypeCode"
+                  }
+                ]
+              },
+              "description": {
+                "value": "Total",
+                "lang": "en"
+              },
+              "value": 7
+            }
+          ],
+          "name": {
+            "value": "sex",
+            "lang": "en"
+          },
+          "uri": ""
+        }
+      ]
+    },
+    "header": {
+      "id": "NM_31_1",
+      "prepared": "2026-03-19T16:25:26Z",
+      "sender": {
+        "contact": {
+          "email": "support@nomisweb.co.uk",
+          "name": "Nomis",
+          "uri": "https://www.nomisweb.co.uk"
+        },
+        "id": "NOMIS"
+      },
+      "test": "false"
+    },
+    "xmlns": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/message",
+    "common": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/common",
+    "structure": "http://www.SDMX.org/resources/SDMXML/schemas/v2_0/structure",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "schemalocation": "http://sdmx.org/docs/2_0/SDMXMessage.xsd"
+  }
+}
