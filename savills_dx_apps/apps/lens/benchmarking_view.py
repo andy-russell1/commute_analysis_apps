@@ -1,18 +1,89 @@
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 import streamlit as st
 
 from apps.lens.common import safe_set_page_config
 from apps.lens.core import model, visuals
 from apps.lens.core.constants import MODE_ADVANCED
-from shared.ui.kpi import render_kpi_strip
 
 
 def _format_delta(value: float) -> str:
     if pd.isna(value):
         return "-"
     return f"{value:+.1f}"
+
+
+def _format_kpi_note_with_colour(note: str) -> str:
+    if not note:
+        return ""
+    match = re.search(r"([+-]\d+(?:\.\d+)?)", str(note))
+    note_text = str(note)
+    if not match:
+        return f"<span style='font-size:0.84rem;line-height:1.2;color:inherit;opacity:0.82;'>{note_text}</span>"
+
+    delta_token = match.group(1)
+    delta_value = float(delta_token)
+    if delta_value > 0:
+        colour = "#35D07F"
+        arrow = "&uarr;"
+    elif delta_value < 0:
+        colour = "#F26A73"
+        arrow = "&darr;"
+    else:
+        colour = "inherit"
+        arrow = "&rarr;"
+    coloured_delta = (
+        f"<span style='display:inline-flex;align-items:center;gap:0.2rem;color:{colour};font-weight:800;"
+        f"font-size:0.9rem;line-height:1.0;vertical-align:middle;'>"
+        f"<span style='font-size:0.8rem;line-height:1;'>{arrow}</span>{delta_token}</span>"
+    )
+    rendered_text = note_text.replace(delta_token, coloured_delta, 1)
+    return f"<span style='font-size:0.84rem;line-height:1.2;color:inherit;opacity:0.9;'>({rendered_text})</span>"
+
+
+def _render_snapshot_kpi_strip(items: list[tuple[str, str, str | None]]) -> None:
+    cells: list[str] = []
+    for label, value, note in items:
+        note_html = _format_kpi_note_with_colour(str(note)) if note else ""
+        value_and_note_html = (
+            "<div style='display:flex;align-items:flex-end;gap:0.52rem;flex-wrap:nowrap;'>"
+            f"<div style='font-size:1.9rem;color:inherit;line-height:1.05;font-weight:500;white-space:nowrap;'>{value}</div>"
+            f"{note_html}"
+            "</div>"
+            if note_html
+            else f"<div style='font-size:1.9rem;color:inherit;line-height:1.05;font-weight:500;white-space:nowrap;'>{value}</div>"
+        )
+        cells.append(
+            "<div style='min-width:0;padding:0.15rem 0.6rem 0.1rem 0.8rem;color:inherit;border-left:4px solid #FFDF00;'>"
+            f"<div style='font-size:0.78rem;color:inherit;opacity:0.72;line-height:1.2;margin-bottom:0.2rem;'>{label}</div>"
+            f"{value_and_note_html}"
+            "</div>"
+        )
+    st.markdown(
+        "<div style='display:grid;grid-template-columns:repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr));"
+        "gap:0.9rem;align-items:stretch;margin:0.15rem 0 1rem 0;'>"
+        + "".join(cells)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _emphasise_benchmark_insight(item: str) -> str:
+    text = str(item)
+    pattern = re.compile(
+        r"^(?P<subject>.+?)\s(?P<verb>is ahead of|trails)\s(?P<benchmark>.+?)\sby\s(?P<delta>\d+(?:\.\d+)?)\spoints\.$"
+    )
+    match = pattern.match(text)
+    if not match:
+        return text
+    subject = match.group("subject")
+    verb = match.group("verb")
+    benchmark = match.group("benchmark")
+    delta = match.group("delta")
+    return f"<strong>{subject}</strong> {verb} {benchmark} by <strong>{delta} points</strong>."
 
 
 def _render_flat_callout(title: str, body: str) -> None:
@@ -287,12 +358,25 @@ def render_page() -> None:
     summary = model.build_benchmark_profile_summary(profile_df, selected_city, benchmark_label, detail_level, top_n=4)
 
     st.subheader("Selected City Snapshot")
-    render_kpi_strip(
+    benchmark_name = str(overview.get("benchmark_label", benchmark_label))
+    _render_snapshot_kpi_strip(
         [
-            ("Selected index", f"{city_summary['overall_index']:.1f}"),
-            ("Capability index", f"{city_summary['capability_score']:.1f}"),
-            ("Cost index", f"{city_summary['cost_score']:.1f}"),
-            ("Rank", f"{city_summary['overall_rank']} of {len(ranks)}"),
+            (
+                "Selected index",
+                f"{city_summary['overall_index']:.1f}",
+                f"vs {benchmark_name}: {_format_delta(float(overview.get('overall_index_gap', float('nan'))))}",
+            ),
+            (
+                "Capability index",
+                f"{city_summary['capability_score']:.1f}",
+                f"vs {benchmark_name}: {_format_delta(float(overview.get('capability_index_gap', float('nan'))))}",
+            ),
+            (
+                "Cost index",
+                f"{city_summary['cost_score']:.1f}",
+                f"vs {benchmark_name}: {_format_delta(float(overview.get('cost_index_gap', float('nan'))))}",
+            ),
+            ("Rank", f"{city_summary['overall_rank']} of {len(ranks)}", None),
         ]
     )
 
@@ -309,17 +393,24 @@ def render_page() -> None:
     chart_col, summary_col = st.columns([1.9, 1.1])
     with chart_col:
         st.subheader("Benchmark Profile")
-        st.plotly_chart(visuals.city_profile_radar(profile_df), use_container_width=True)
+        st.plotly_chart(
+            visuals.city_profile_radar(
+                profile_df,
+                selected_label=selected_city,
+                benchmark_label=benchmark_label,
+            ),
+            use_container_width=True,
+        )
         _render_benchmark_profile_key(profile_df)
     with summary_col:
         _render_flat_insight(
             "Top areas ahead",
-            summary["strengths"],
+            [_emphasise_benchmark_insight(item) for item in summary["strengths"]],
             "No material areas ahead on this benchmark selection.",
         )
         _render_flat_insight(
             "Top areas behind",
-            summary["weaknesses"],
+            [_emphasise_benchmark_insight(item) for item in summary["weaknesses"]],
             "No material areas behind on this benchmark selection.",
         )
         _render_flat_insight(
@@ -343,7 +434,6 @@ def render_page() -> None:
             display_table["group_label"] != display_table["item_label"],
             "",
         )
-        basis_label = summary["basis_label"]
         table_columns = [
             "item_label",
             "comparison_group",
@@ -358,15 +448,6 @@ def render_page() -> None:
             "benchmark_score": f"{benchmark_label} Index",
             "delta_to_benchmark": "Index Gap",
         }
-        if comparison_table["city_basis"].notna().any() or comparison_table["benchmark_basis"].notna().any():
-            table_columns.extend(["city_basis", "benchmark_basis", "delta_to_benchmark_basis"])
-            rename_map.update(
-                {
-                    "city_basis": f"{selected_city} {basis_label}",
-                    "benchmark_basis": f"{benchmark_label} {basis_label}",
-                    "delta_to_benchmark_basis": f"{basis_label} Gap",
-                }
-            )
         st.dataframe(
             model.format_table_for_display(
                 display_table[table_columns].rename(columns=rename_map),

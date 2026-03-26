@@ -251,10 +251,13 @@ def profile_group_key(profile_df: pd.DataFrame) -> pd.DataFrame:
 
 def profile_legend_items(profile_df: pd.DataFrame) -> dict[str, list[dict[str, str]]]:
     groups = profile_group_key(profile_df)
+    series_values = profile_df["series"].dropna().astype(str).drop_duplicates().tolist() if "series" in profile_df.columns else []
+    selected_label = series_values[0] if len(series_values) >= 1 else "Selected city"
+    benchmark_label = series_values[1] if len(series_values) >= 2 else "Benchmark"
     return {
         "series": [
-            {"label": str(profile_df["series"].drop_duplicates().tolist()[0]), "colour": "#F2D500", "style": "primary"},
-            {"label": "Portfolio median", "colour": "#4A9A8D", "style": "secondary"},
+            {"label": selected_label, "colour": "#F2D500", "style": "primary"},
+            {"label": benchmark_label, "colour": "#4A9A8D", "style": "secondary"},
         ],
         "groups": [{"label": str(row["Group"]), "colour": str(row["Colour"])} for _, row in groups.iterrows()],
     }
@@ -322,6 +325,14 @@ def overall_stacked_bar(
         color_discrete_map=SAVILLS_MACRO_COLOR_MAP,
         color_discrete_sequence=SAVILLS_COLOR_SEQUENCE,
     )
+    fig.update_traces(
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Macro: %{fullData.name}<br>"
+            "Score: %{x:.1f}"
+            "<extra></extra>"
+        )
+    )
     if "overall_index" in plot_df.columns:
         fig.update_layout(xaxis_range=[0, 100])
     fig.update_layout(legend_title_text="", margin=dict(l=10, r=10, t=40, b=10))
@@ -381,6 +392,14 @@ def macro_drilldown_bar(major_scores: pd.DataFrame, macro_scores: pd.DataFrame, 
         labels={x_col: x_label, "city": "City", "major": "Major"},
         color_discrete_sequence=SAVILLS_COLOR_SEQUENCE,
     )
+    fig.update_traces(
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Major: %{fullData.name}<br>"
+            "Score: %{x:.1f}"
+            "<extra></extra>"
+        )
+    )
     if "macro_index" in plot_df.columns:
         fig.update_layout(xaxis_range=[0, 100])
     fig.update_layout(legend_title_text="", margin=dict(l=10, r=10, t=40, b=10))
@@ -421,14 +440,23 @@ def capability_cost_bubble(
         color_discrete_map=SAVILLS_MARKET_TIER_COLOR_MAP,
         category_orders={"market_tier": ["Primary", "Secondary", "Tertiary"]},
     )
-    fig.update_traces(textposition="top center")
+    fig.update_traces(
+        textposition="top center",
+        hovertemplate=(
+            "<b>%{hovertext}</b><br>"
+            "Capability Score: %{x:.1f}<br>"
+            "Cost Score: %{y:.1f}<br>"
+            f"{resolved_size_label}: %{{marker.size:.1f}}"
+            "<extra></extra>"
+        ),
+    )
     fig.add_vline(x=x_median, line_dash="dash", line_color=_LINE_COLOUR, line_width=1.5)
     fig.add_hline(y=y_median, line_dash="dash", line_color=_LINE_COLOUR, line_width=1.5)
 
     fig.add_annotation(
         x=x_median,
         y=100,
-        text=f"Median capability: {x_median:.1f}",
+        text=f"<b>Median capability: {x_median:.1f}</b>",
         showarrow=False,
         yshift=12,
         font=dict(size=11, color=_SURFACE_TEXT_COLOUR),
@@ -437,17 +465,17 @@ def capability_cost_bubble(
     fig.add_annotation(
         x=100,
         y=y_median,
-        text=f"Median cost: {y_median:.1f}",
+        text=f"<b>Median cost: {y_median:.1f}</b>",
         showarrow=False,
         xshift=-50,
         font=dict(size=11, color=_SURFACE_TEXT_COLOUR),
         bgcolor="rgba(38,42,67,0.16)",
     )
 
-    fig.add_annotation(xref="paper", yref="paper", x=0.02, y=0.98, text="Lower capability / stronger cost position", showarrow=False)
-    fig.add_annotation(xref="paper", yref="paper", x=0.98, y=0.98, text="Higher capability / stronger cost position", showarrow=False)
-    fig.add_annotation(xref="paper", yref="paper", x=0.02, y=0.02, text="Lower capability / weaker cost position", showarrow=False)
-    fig.add_annotation(xref="paper", yref="paper", x=0.98, y=0.02, text="Higher capability / weaker cost position", showarrow=False)
+    fig.add_annotation(xref="paper", yref="paper", x=0.02, y=0.98, text="Lower capability / Lower cost", showarrow=False)
+    fig.add_annotation(xref="paper", yref="paper", x=0.98, y=0.98, text="Higher capability / Lower cost", showarrow=False)
+    fig.add_annotation(xref="paper", yref="paper", x=0.02, y=0.02, text="Lower capability / Higher cost", showarrow=False)
+    fig.add_annotation(xref="paper", yref="paper", x=0.98, y=0.02, text="Higher capability / Higher cost", showarrow=False)
 
     fig.update_xaxes(range=[0, 100], ticksuffix="", dtick=20, gridcolor=_GRID_COLOUR, zeroline=False)
     fig.update_yaxes(range=[0, 100], ticksuffix="", dtick=20, gridcolor=_GRID_COLOUR, zeroline=False)
@@ -508,7 +536,12 @@ def benchmark_delta_bar(comparison_table: pd.DataFrame, top_n: int = 12) -> go.F
     return _apply_executive_chart_layout(fig, height=max(420, 40 * len(plot_df) + 80))
 
 
-def city_profile_radar(profile_df: pd.DataFrame) -> go.Figure:
+def city_profile_radar(
+    profile_df: pd.DataFrame,
+    *,
+    selected_label: str | None = None,
+    benchmark_label: str | None = None,
+) -> go.Figure:
     plot_df = profile_df.copy()
     if plot_df.empty:
         return _apply_executive_chart_layout(go.Figure(), height=520)
@@ -518,10 +551,23 @@ def city_profile_radar(profile_df: pd.DataFrame) -> go.Figure:
     theta_map = dict(zip(axis_meta["item_key"], axis_meta["theta"], strict=False))
     fig = go.Figure()
     _add_profile_group_underlays(fig, axis_meta)
-    series_order = plot_df["series"].drop_duplicates().tolist()
+    available_series = plot_df["series"].dropna().astype(str).drop_duplicates().tolist()
+    resolved_selected = str(selected_label).strip() if selected_label else ""
+    resolved_benchmark = str(benchmark_label).strip() if benchmark_label else ""
+    series_order: list[str] = []
+    if resolved_selected and resolved_selected in available_series:
+        series_order.append(resolved_selected)
+    if resolved_benchmark and resolved_benchmark in available_series and resolved_benchmark not in series_order:
+        series_order.append(resolved_benchmark)
+    for series in available_series:
+        if series not in series_order:
+            series_order.append(series)
+
+    primary_series = series_order[0] if series_order else "Selected city"
+    secondary_series = series_order[1] if len(series_order) > 1 else "Benchmark"
     colour_map = {
-        series_order[0]: "#F2D500",
-        series_order[1] if len(series_order) > 1 else "Portfolio median": "#4A9A8D",
+        primary_series: "#F2D500",
+        secondary_series: "#4A9A8D",
     }
     for series in series_order:
         series_df = (
@@ -541,18 +587,18 @@ def city_profile_radar(profile_df: pd.DataFrame) -> go.Figure:
                 name=series,
                 mode="lines+markers",
                 fill="toself",
-                fillcolor="rgba(242, 213, 0, 0.24)" if series == series_order[0] else "rgba(74, 154, 141, 0.10)",
+                fillcolor="rgba(242, 213, 0, 0.24)" if series == primary_series else "rgba(74, 154, 141, 0.10)",
                 opacity=1.0,
                 line=dict(
                     color=colour_map.get(series, "#F2D500"),
-                    width=3.5 if series == series_order[0] else 2.4,
-                    dash="solid" if series == series_order[0] else "dash",
+                    width=3.5 if series == primary_series else 2.4,
+                    dash="solid" if series == primary_series else "dash",
                 ),
                 marker=dict(
                     color=colour_map.get(series, "#F2D500"),
-                    size=8 if series == series_order[0] else 6,
+                    size=8 if series == primary_series else 6,
                     line=dict(
-                        color="#262A43" if series == series_order[0] else colour_map.get(series, "#4A9A8D"),
+                        color="#262A43" if series == primary_series else colour_map.get(series, "#4A9A8D"),
                         width=1,
                     ),
                 ),
@@ -709,11 +755,25 @@ def data_matrix_heatmap(
     *,
     value_label: str = "Value",
     reverse_scale: bool = False,
+    theme_base: str = "dark",
 ) -> go.Figure:
+    is_dark = str(theme_base).strip().lower() == "dark"
+    if is_dark:
+        rag_scale = [
+            [0.0, "#D1433E"],
+            [0.5, "#D5B150"],
+            [1.0, "#4DB178"],
+        ]
+    else:
+        rag_scale = [
+            [0.0, "#D85248"],
+            [0.5, "#E8C45D"],
+            [1.0, "#62B884"],
+        ]
     fig = px.imshow(
         matrix_df,
         aspect="auto",
-        color_continuous_scale="Viridis",
+        color_continuous_scale=rag_scale,
         labels={"color": value_label},
     )
     if reverse_scale:

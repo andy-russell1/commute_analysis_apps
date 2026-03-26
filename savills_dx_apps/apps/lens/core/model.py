@@ -209,14 +209,30 @@ def _blend_hex(start_hex: str, end_hex: str, fraction: float) -> str:
     return _rgb_to_hex(blended)
 
 
-def _rag_gradient_hex(fraction: float) -> str:
+def get_active_theme_base() -> str:
+    try:
+        base = st.get_option("theme.base")
+    except Exception:
+        base = None
+    resolved = str(base or "dark").strip().lower()
+    if resolved not in {"dark", "light"}:
+        return "dark"
+    return resolved
+
+
+def _rag_gradient_hex(fraction: float, *, theme_base: str = "dark") -> str:
     frac = _clamp01(fraction)
+    is_dark = str(theme_base).strip().lower() == "dark"
+    if is_dark:
+        if frac <= 0.5:
+            return _blend_hex("#B14A4A", "#C3A34A", frac / 0.5)
+        return _blend_hex("#C3A34A", "#47A56E", (frac - 0.5) / 0.5)
     if frac <= 0.5:
-        return _blend_hex("#f4cccc", "#fce5cd", frac / 0.5)
-    return _blend_hex("#fce5cd", "#d9ead3", (frac - 0.5) / 0.5)
+        return _blend_hex("#F3B0A7", "#F1D787", frac / 0.5)
+    return _blend_hex("#F1D787", "#BDE6C9", (frac - 0.5) / 0.5)
 
 
-def _build_relative_row_styles(row: pd.Series, value_columns: list[str], reverse: bool) -> list[str]:
+def _build_relative_row_styles(row: pd.Series, value_columns: list[str], reverse: bool, *, theme_base: str = "dark") -> list[str]:
     styles = [""] * len(row)
     numeric = pd.to_numeric(row[value_columns], errors="coerce")
     valid = numeric.dropna()
@@ -240,7 +256,7 @@ def _build_relative_row_styles(row: pd.Series, value_columns: list[str], reverse
         if pd.isna(raw_value):
             continue
         weight = _clamp01(float(relative.get(column, 0.5)))
-        background = _rag_gradient_hex(weight)
+        background = _rag_gradient_hex(weight, theme_base=theme_base)
         border = _blend_hex("#d96b6b", "#6aa84f", weight)
         styles[row.index.get_loc(column)] = f"background-color: {background}; border-left: 3px solid {border};"
     return styles
@@ -252,6 +268,7 @@ def style_relative_value_table(
     value_columns: list[str],
     decimals: int | None = None,
     reverse_rows: pd.Series | dict[Any, bool] | None = None,
+    theme_base: str | None = None,
 ) -> pd.io.formats.style.Styler:
     table = df.copy()
     subset = [column for column in value_columns if column in table.columns]
@@ -260,6 +277,9 @@ def style_relative_value_table(
         reverse_lookup = {idx: bool(value) for idx, value in reverse_rows.items()}
     elif isinstance(reverse_rows, dict):
         reverse_lookup = {idx: bool(value) for idx, value in reverse_rows.items()}
+    resolved_theme = str(theme_base or get_active_theme_base()).strip().lower()
+    if resolved_theme not in {"dark", "light"}:
+        resolved_theme = "dark"
 
     styler = table.style
     if decimals is not None:
@@ -271,7 +291,7 @@ def style_relative_value_table(
 
     def _apply_row_styles(row: pd.Series) -> list[str]:
         reverse = reverse_lookup.get(row.name, False)
-        return _build_relative_row_styles(row, subset, reverse=reverse)
+        return _build_relative_row_styles(row, subset, reverse=reverse, theme_base=resolved_theme)
 
     if subset:
         styler = styler.apply(_apply_row_styles, axis=1)
@@ -891,6 +911,8 @@ def _finalize_profile_comparison(
     benchmark = benchmark.copy()
     selected["series"] = city
     benchmark["series"] = benchmark_label
+    selected["series_order"] = 0
+    benchmark["series_order"] = 1
 
     columns = [
         "series",
@@ -904,9 +926,10 @@ def _finalize_profile_comparison(
         "group_key",
         "group_label",
         "sort_order",
+        "series_order",
     ]
     output = pd.concat([selected[columns], benchmark[columns]], ignore_index=True)
-    output = output.sort_values(["series", "sort_order"]).reset_index(drop=True)
+    output = output.sort_values(["series_order", "sort_order"]).drop(columns=["series_order"]).reset_index(drop=True)
     output["detail_level"] = detail_level
     return output
 
@@ -1156,13 +1179,49 @@ def build_benchmark_overview(
     benchmark_overall_index = (
         float(pd.to_numeric(benchmark.iloc[0]["overall_index"], errors="coerce")) if not benchmark.empty else np.nan
     )
+
+    benchmark_capability_index = np.nan
+    benchmark_cost_index = np.nan
+    if not selected_capability.empty and not capability_cost.empty:
+        if resolved_mode == "city":
+            benchmark_capability = capability_cost[capability_cost["city"] == benchmark_label].copy()
+            if benchmark_capability.empty and benchmark_city:
+                benchmark_capability = capability_cost[capability_cost["city"] == str(benchmark_city)].copy()
+            if not benchmark_capability.empty:
+                benchmark_capability_index = float(benchmark_capability.iloc[0].get("capability_index", np.nan))
+                benchmark_cost_index = float(benchmark_capability.iloc[0].get("cost_index", np.nan))
+        elif resolved_mode == "best":
+            best_city = str(overall_scores.iloc[0]["city"])
+            benchmark_capability = capability_cost[capability_cost["city"] == best_city].copy()
+            if not benchmark_capability.empty:
+                benchmark_capability_index = float(benchmark_capability.iloc[0].get("capability_index", np.nan))
+                benchmark_cost_index = float(benchmark_capability.iloc[0].get("cost_index", np.nan))
+        else:
+            benchmark_capability_index = float(pd.to_numeric(capability_cost.get("capability_index"), errors="coerce").mean())
+            benchmark_cost_index = float(pd.to_numeric(capability_cost.get("cost_index"), errors="coerce").mean())
+
+    selected_capability_index = (
+        float(selected_capability.iloc[0]["capability_index"])
+        if not selected_capability.empty and "capability_index" in selected_capability.columns
+        else np.nan
+    )
+    selected_cost_index = (
+        float(selected_capability.iloc[0]["cost_index"])
+        if not selected_capability.empty and "cost_index" in selected_capability.columns
+        else np.nan
+    )
+
     return {
         "selected_overall_index": selected_overall_index,
         "benchmark_overall_index": benchmark_overall_index,
         "overall_index_gap": selected_overall_index - benchmark_overall_index,
         "selected_rank": float(selected.iloc[0]["overall_rank"]) if "overall_rank" in selected.columns else np.nan,
-        "selected_capability_index": float(selected_capability.iloc[0]["capability_index"]) if not selected_capability.empty else np.nan,
-        "selected_cost_index": float(selected_capability.iloc[0]["cost_index"]) if not selected_capability.empty else np.nan,
+        "selected_capability_index": selected_capability_index,
+        "benchmark_capability_index": benchmark_capability_index,
+        "capability_index_gap": selected_capability_index - benchmark_capability_index,
+        "selected_cost_index": selected_cost_index,
+        "benchmark_cost_index": benchmark_cost_index,
+        "cost_index_gap": selected_cost_index - benchmark_cost_index,
         "benchmark_label": benchmark_label,
     }
 

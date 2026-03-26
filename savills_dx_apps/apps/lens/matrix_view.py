@@ -46,16 +46,13 @@ def render_page() -> None:
     )
 
     st.session_state["lens_matrix_view"] = st.radio(
-        "Default open tab",
+        "Heatmap view",
         options=view_labels,
         index=view_labels.index(st.session_state["lens_matrix_view"]),
         horizontal=True,
     )
-
-    ordered_views = [st.session_state["lens_matrix_view"]] + [
-        label for label in view_labels if label != st.session_state["lens_matrix_view"]
-    ]
-    tabs = st.tabs(ordered_views)
+    active_view = st.session_state["lens_matrix_view"]
+    theme_base = model.get_active_theme_base()
 
     local_decimals = 3
 
@@ -74,6 +71,7 @@ def render_page() -> None:
                 title=f"{view_label} Heatmap",
                 value_label=view_label,
                 reverse_scale=reverse_scale,
+                theme_base=theme_base,
             ),
             use_container_width=True,
         )
@@ -94,6 +92,7 @@ def render_page() -> None:
                     model.format_table_for_display(matrix_preview),
                     value_columns=city_display_columns,
                     reverse_rows=reverse_rows,
+                    theme_base=theme_base,
                 ),
                 use_container_width=True,
                 hide_index=True,
@@ -108,6 +107,7 @@ def render_page() -> None:
                     value_columns=city_display_columns,
                     decimals=local_decimals,
                     reverse_rows={idx: metric_col == "rank" for idx in matrix_preview.index},
+                    theme_base=theme_base,
                 ),
                 use_container_width=True,
                 hide_index=True,
@@ -130,11 +130,10 @@ def render_page() -> None:
                             value_columns=[model.to_proper_case_label(city) for city in parsed["city_columns"]],
                             decimals=0,
                             reverse_rows={idx: True for idx in reference_preview.index},
+                            theme_base=theme_base,
                         ),
                         use_container_width=True,
                         hide_index=True,
                     )
 
-    for label, tab in zip(ordered_views, tabs, strict=False):
-        with tab:
-            render_view(label)
+    render_view(active_view)

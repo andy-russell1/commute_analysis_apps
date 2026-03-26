@@ -263,11 +263,7 @@ def render_page() -> None:
     major_weights = st.session_state["lens_major_weights"].copy()
     minor_weights = st.session_state["lens_minor_weights"].copy()
 
-    st.markdown(f"**Mode:** `{mode}`")
-    st.markdown(f"**Weighting Mode:** `{weight_mode}`")
-
     if mode == MODE_CLIENT:
-        st.info("Client mode focuses on decision outputs. Direction overrides stay in Advanced mode.")
         macro_weights = _render_client_presets(macro_weights, key_prefix=key_prefix)
     updated_macro = _render_macro_sliders(macro_weights, key_prefix=key_prefix)
     st.session_state["lens_macro_weights"] = updated_macro
@@ -275,7 +271,6 @@ def render_page() -> None:
     if weight_mode == "Simple":
         simple_major, simple_minor = model.build_simple_weight_tables(criteria_df, updated_macro)
         validation_result = validate.validate_weight_sums(updated_macro, simple_major, simple_minor)
-        st.info("Simple mode applies equal splits below macro level.")
     else:
         st.subheader("Advanced Hierarchy Weights")
         updated_major, updated_minor = _render_major_and_minor_sliders(
@@ -323,12 +318,11 @@ def render_page() -> None:
             st.dataframe(model.format_table_for_display(preview, decimals=1), use_container_width=True, hide_index=True)
     else:
         st.subheader("Current Top 3")
-        preview = leaderboard.head(3)[["overall_rank", "city", "overall_index", "distance_to_leader", "overall_tier"]].rename(
+        preview = leaderboard.head(3)[["overall_rank", "city", "overall_index", "distance_to_leader"]].rename(
             columns={
                 "overall_rank": "rank",
                 "overall_index": "overall_index",
                 "distance_to_leader": "distance_to_leader",
-                "overall_tier": "tier",
             }
         )
         st.dataframe(model.format_table_for_display(preview, decimals=1), use_container_width=True, hide_index=True)

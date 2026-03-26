@@ -47,6 +47,21 @@ def render_page() -> None:
     if not context["capability_macros"]:
         st.warning("Select at least one macro for capability in the sidebar.")
     else:
-        bubble_fig = visuals.capability_cost_bubble(bundle["capability_cost"])
+        size_options = [
+            ("Population", "population"),
+            ("Overall Index (0-100)", "overall_index"),
+        ]
+        size_label = st.selectbox(
+            "Bubble size",
+            options=[label for label, _ in size_options],
+            index=0,
+            key="lens_results_bubble_size",
+        )
+        selected_size_col = dict(size_options).get(size_label, "population")
+        bubble_fig = visuals.capability_cost_bubble(
+            bundle["capability_cost"],
+            size_col=selected_size_col,
+            size_label=size_label,
+        )
         st.plotly_chart(bubble_fig, use_container_width=True)
         st.caption("Cost per Capability stays fixed on the indexed 0-100 axes.")

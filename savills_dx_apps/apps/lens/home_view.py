@@ -45,12 +45,13 @@ def render_page() -> None:
     ranks = model.build_city_ranks(bundle["overall_scores"])
     top3 = ranks.head(3).copy()
     top_table = model.build_home_recommendations_table(bundle, top_n=3)
+    best_city = str(top3.iloc[0]["city"])
 
     render_kpi_strip(
         [
             ("Recommended Cities", int(top3.shape[0])),
             ("Cities Evaluated", int(ranks.shape[0])),
-            ("Mode", context["mode"]),
+            ("Top Ranked City", best_city),
         ],
         columns=3,
     )
@@ -58,15 +59,9 @@ def render_page() -> None:
     st.subheader("Top Recommendations")
     st.dataframe(model.format_table_for_display(top_table, decimals=1), use_container_width=True, hide_index=True)
 
-    best_city = str(top3.iloc[0]["city"])
     best_drill = model.build_city_drilldown(bundle, best_city, top_n=3)
     strongest_macro = best_drill["summary"]["strongest_macro"]
     tradeoff_macro = best_drill["summary"]["tradeoff_macro"]
-
-    model.render_context_sentence(
-        "Top-line answer",
-        f"{best_city} currently leads the portfolio, with {strongest_macro} as the strongest macro and {tradeoff_macro} as the main trade-off area.",
-    )
 
     st.subheader("Quick Narrative")
     st.write(
@@ -75,7 +70,6 @@ def render_page() -> None:
     )
 
     st.subheader("Next Steps")
-    st.caption("These are clickable links. Select one to open that page.")
     render_nav_link(
         "Open Results Dashboard",
         route="results",
