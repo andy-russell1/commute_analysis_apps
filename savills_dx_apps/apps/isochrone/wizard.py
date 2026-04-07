@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from typing import Optional
 
 import geopandas as gpd
@@ -28,6 +29,10 @@ ISOCHRONE_COLORS = [
 OFFICE_NAME_COL = "Office___A"
 OFFICE_LAT_COL = "Office___L"
 OFFICE_LON_COL = "Office___2"
+CORE_BANDS = [30.0, 45.0, 60.0]
+CORE_MODE_LABEL = "Core (30 / 45 / 60)"
+EXTENDED_MODE_LABEL = "Extended (all uploaded bands)"
+MAP_RENDER_VERSION = "lad-boundaries-hidden-by-default-v2"
 
 POP_AGE_COLS = [
     "Aged 15 to 19 years",
@@ -156,6 +161,227 @@ def _format_band_minutes(time_col: str, value: object) -> Optional[float]:
     return numeric
 
 
+def _minutes_series(df: pd.DataFrame, time_col: str) -> pd.Series:
+    values = pd.to_numeric(df[time_col], errors="coerce")
+    if time_col == "Query_Isoc":
+        return values / 60.0
+    return values
+
+
+def _normalise_band_value(value: float) -> float:
+    return round(float(value), 6)
+
+
+def _available_band_minutes(iso: gpd.GeoDataFrame, time_col: str) -> list[float]:
+    if time_col not in iso.columns:
+        return []
+    minutes = _minutes_series(iso, time_col)
+    minutes = minutes[pd.to_numeric(minutes, errors="coerce").notna()]
+    minutes = minutes[minutes >= 0]
+    return sorted({_normalise_band_value(value) for value in minutes.tolist()})
+
+
+def _resolve_display_bands(available_bands: list[float], analysis_mode: str) -> tuple[list[float], list[float]]:
+    if analysis_mode == CORE_MODE_LABEL:
+        core = [_normalise_band_value(value) for value in CORE_BANDS]
+        available_set = {_normalise_band_value(value) for value in available_bands}
+        display = [value for value in core if value in available_set]
+        missing = [value for value in core if value not in available_set]
+        return display, missing
+    return list(available_bands), []
+
+
+def _format_minutes_label(value: float) -> str:
+    numeric = float(value)
+    if numeric.is_integer():
+        return "{0:.0f}".format(numeric)
+    return "{0:g}".format(numeric)
+
+
+def _format_band_title(value: float) -> str:
+    return "Residents within {0} min".format(_format_minutes_label(value))
+
+
+def _format_interval_band_label(current_band: float, previous_band: Optional[float]) -> str:
+    if previous_band is None:
+        return "<={0} min".format(_format_minutes_label(current_band))
+    return "{0}-{1} min".format(_format_minutes_label(previous_band), _format_minutes_label(current_band))
+
+
+def _format_transport_label(value: object) -> str:
+    label = str(value).replace("_", " ").replace("+", " and ").title()
+    return label.replace(" And ", " and ")
+
+
+def _mix_channel(start: int, end: int, ratio: float) -> int:
+    return int(round(start + (end - start) * ratio))
+
+
+def _mix_hex(start: str, end: str, ratio: float) -> str:
+    start = start.lstrip("#")
+    end = end.lstrip("#")
+    ratio = max(0.0, min(1.0, float(ratio)))
+    channels = [
+        _mix_channel(int(start[index:index + 2], 16), int(end[index:index + 2], 16), ratio)
+        for index in (0, 2, 4)
+    ]
+    return "#{0:02x}{1:02x}{2:02x}".format(*channels)
+
+
+def _build_band_palette(bands: list[float]) -> dict[float, str]:
+    if not bands:
+        return {}
+
+    green = "#2ecc71"
+    amber = "#f1c40f"
+    red = "#c0392b"
+    count = len(bands)
+    colors: list[str] = []
+    if count == 1:
+        colors = [green]
+    else:
+        for index in range(count):
+            position = index / float(count - 1)
+            if position <= 0.5:
+                color = _mix_hex(green, amber, position / 0.5 if position else 0.0)
+            else:
+                color = _mix_hex(amber, red, (position - 0.5) / 0.5)
+            colors.append(color)
+    return {float(band): color for band, color in zip(bands, colors)}
+
+
+def _format_increment_note(current_value: float, previous_value: Optional[float], previous_band: Optional[float]) -> str:
+    if previous_value is None or previous_band is None:
+        return "Fastest available band"
+    delta = current_value - previous_value
+    if abs(delta) < 0.5:
+        return "No material change vs {0} min".format(_format_minutes_label(previous_band))
+    sign = "+" if delta >= 0 else "-"
+    return "{0}{1:,.0f} vs {2} min".format(sign, abs(delta), _format_minutes_label(previous_band))
+
+
+def _build_band_summary_items(pop_counts: dict[float, float]) -> list[dict[str, object]]:
+    ordered_bands = sorted(pop_counts)
+    items: list[dict[str, object]] = []
+    previous_band: Optional[float] = None
+    previous_value: Optional[float] = None
+    palette = _build_band_palette(ordered_bands)
+    for band in ordered_bands:
+        current_value = float(pop_counts.get(band, 0.0))
+        items.append(
+            {
+                "band": float(band),
+                "label": _format_band_title(band),
+                "value": "{0:,.0f}".format(current_value),
+                "note": _format_increment_note(current_value, previous_value, previous_band),
+                "color": palette.get(float(band), ISOCHRONE_COLORS[0]),
+            }
+        )
+        previous_band = float(band)
+        previous_value = current_value
+    return items
+
+
+def _render_population_summary(pop_counts: dict[float, float], analysis_mode: str) -> None:
+    if not pop_counts:
+        return
+
+    ordered_counts = {float(band): float(pop_counts[band]) for band in sorted(pop_counts)}
+    if analysis_mode == CORE_MODE_LABEL:
+        render_kpi_strip(
+            [(_format_band_title(band), "{0:,.0f}".format(value)) for band, value in ordered_counts.items()],
+            columns=max(len(ordered_counts), 1),
+        )
+        return
+
+    items = _build_band_summary_items(ordered_counts)
+    render_kpi_strip(
+        [
+            (item["label"], item["value"], item["note"], item["color"])
+            for item in items
+        ],
+        columns=4,
+    )
+
+
+def _build_interval_band_geometries(iso: gpd.GeoDataFrame, bands: list[float]) -> list[tuple[float, Optional[float], object]]:
+    intervals: list[tuple[float, Optional[float], object]] = []
+    previous_band: Optional[float] = None
+    previous_union = None
+
+    for band in sorted(bands):
+        cumulative = iso[iso["_minutes"] <= float(band)]
+        if cumulative.empty:
+            previous_band = float(band)
+            continue
+
+        current_union = cumulative.geometry.unary_union
+        if current_union is None or current_union.is_empty:
+            previous_band = float(band)
+            continue
+
+        current_union = current_union.buffer(0)
+        interval_geom = current_union
+        if previous_union is not None and not previous_union.is_empty:
+            interval_geom = current_union.difference(previous_union)
+        if interval_geom is None or interval_geom.is_empty:
+            previous_band = float(band)
+            previous_union = current_union
+            continue
+
+        intervals.append((float(band), previous_band, interval_geom))
+        previous_band = float(band)
+        previous_union = current_union
+
+    return intervals
+
+
+def _compute_map_geometry_payload(
+    isochrones: gpd.GeoDataFrame,
+    tran: str,
+    display_bands: Optional[list[float]] = None,
+) -> dict[str, object]:
+    iso = isochrones.copy()
+    time_col = "Query_Time" if "Query_Time" in iso.columns else "Query_Isoc"
+    if time_col not in iso.columns:
+        raise ValueError("Isochrone data is missing 'Query_Time' or 'Query_Isoc'")
+
+    iso["_minutes"] = _minutes_series(iso, time_col).apply(
+        lambda value: _normalise_band_value(value) if pd.notna(value) else value
+    )
+    iso = iso[pd.to_numeric(iso["_minutes"], errors="coerce").notna()].copy()
+
+    if "Query_Tran" in iso.columns:
+        iso = iso[iso["Query_Tran"] == tran]
+    else:
+        raise ValueError("Isochrone data is missing 'Query_Tran'")
+
+    iso_all = iso.copy()
+    if display_bands is not None:
+        allowed = {_normalise_band_value(value) for value in display_bands}
+        iso = iso[iso["_minutes"].isin(allowed)].copy()
+
+    if iso_all.empty:
+        raise ValueError("No isochrones found for Query_Tran = '{0}'".format(tran))
+
+    times_sorted = sorted({_normalise_band_value(value) for value in iso["_minutes"].tolist()})
+    minx, miny, maxx, maxy = iso_all.total_bounds
+    has_bounds = all(pd.notna(value) for value in [minx, miny, maxx, maxy]) and minx != maxx and miny != maxy
+    center = iso_all.geometry.unary_union.centroid
+
+    return {
+        "color_map": _build_band_palette(times_sorted),
+        "interval_geometries": _build_interval_band_geometries(iso, times_sorted),
+        "bounds": ((float(miny), float(minx)), (float(maxy), float(maxx))) if has_bounds else None,
+        "center": (float(center.y), float(center.x)),
+    }
+
+
+def _cache_namespace(name: str) -> dict:
+    cache = st.session_state.setdefault("_isochrone_cache", {})
+    return cache.setdefault(name, {})
+
+
 def _ensure_total_population(lad_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     lad = lad_gdf.copy()
     if "Total" in lad.columns:
@@ -213,47 +439,23 @@ def build_folium_map(
     gdf: gpd.GeoDataFrame,
     isochrones: gpd.GeoDataFrame,
     tran: str,
-    drop_driving_train: bool = True,
+    display_bands: Optional[list[float]] = None,
     show_markers: bool = True,
     show_office_marker: bool = True,
     postcode_col: str = "Postcode District",
     office_point: Optional[tuple] = None,
     lad_boundaries: Optional[gpd.GeoDataFrame] = None,
     show_isochrones: bool = True,
+    map_payload: Optional[dict[str, object]] = None,
 ) -> folium.Map:
     gdf = gdf.copy()
-    iso = isochrones.copy()
-
-    if drop_driving_train and "Query_Tran" in iso.columns:
-        iso = iso[iso["Query_Tran"] != "driving+train"]
-
-    time_col = "Query_Time" if "Query_Time" in iso.columns else "Query_Isoc"
-    if time_col not in iso.columns:
-        raise ValueError("Isochrone data is missing 'Query_Time' or 'Query_Isoc'")
-
-    times_all = [t for t in iso[time_col].dropna().unique().tolist()]
-
-    def _time_key(val):
-        try:
-            return (0, float(val))
-        except (TypeError, ValueError):
-            return (1, str(val))
-
-    times_sorted = sorted(times_all, key=_time_key)
-    color_map = {
-        str(t): ISOCHRONE_COLORS[i % len(ISOCHRONE_COLORS)] for i, t in enumerate(times_sorted)
-    }
-
-    if "Query_Tran" in iso.columns:
-        iso = iso[iso["Query_Tran"] == tran]
-    else:
-        raise ValueError("Isochrone data is missing 'Query_Tran'")
-
-    if iso.empty:
-        raise ValueError("No isochrones found for Query_Tran = '{0}'".format(tran))
-
-    center = iso.geometry.unary_union.centroid
-    m = folium.Map(location=[center.y, center.x], zoom_start=11)
+    payload = map_payload or _compute_map_geometry_payload(
+        isochrones=isochrones,
+        tran=tran,
+        display_bands=display_bands,
+    )
+    center = payload["center"]
+    m = folium.Map(location=[center[0], center[1]], zoom_start=11)
 
     folium.TileLayer(
         "CartoDB positron",
@@ -262,28 +464,35 @@ def build_folium_map(
     ).add_to(m)
 
     if lad_boundaries is not None and not lad_boundaries.empty:
+        lad_group = folium.FeatureGroup(name="LAD boundaries", show=False)
         folium.GeoJson(
             lad_boundaries,
-            name="LAD boundaries",
             style_function=lambda _: {"fillOpacity": 0.0, "color": "#5f6368", "weight": 0.6},
-        ).add_to(m)
+        ).add_to(lad_group)
+        lad_group.add_to(m)
 
-    iso = iso.sort_values(by=time_col, ascending=False)
+    bounds = payload.get("bounds")
+    if bounds:
+        m.fit_bounds([[bounds[0][0], bounds[0][1]], [bounds[1][0], bounds[1][1]]])
 
-    if show_isochrones:
+    interval_geometries = payload.get("interval_geometries", [])
+    color_map = payload.get("color_map", {})
+    if show_isochrones and interval_geometries:
         iso_group = folium.FeatureGroup(name="Isochrone Bands", show=True)
-        for _, row in iso.iterrows():
-            time_val = row.get(time_col, "")
-            color = color_map.get(str(time_val), ISOCHRONE_COLORS[0])
+        for band_minutes, previous_band, geometry in reversed(interval_geometries):
+            color = color_map.get(float(band_minutes), ISOCHRONE_COLORS[0])
             folium.GeoJson(
-                row.geometry,
+                geometry,
                 style_function=lambda x, color=color: {
                     "fillColor": color,
                     "color": color,
                     "weight": 1,
-                    "fillOpacity": 0.2,
+                    "fillOpacity": 0.44,
                 },
-                tooltip="{0} - {1} mins".format(tran, time_val),
+                tooltip="{0} - {1}".format(
+                    _format_transport_label(tran),
+                    _format_interval_band_label(band_minutes, previous_band),
+                ),
             ).add_to(iso_group)
         iso_group.add_to(m)
 
@@ -364,16 +573,17 @@ class IsochronePlugin(AppPlugin):
             "isochrones": isochrones,
             "lad_gdf": lad_gdf,
             "lad_points": lad_points,
+            "upload_signature": hashlib.md5(upload.bytes_data).hexdigest(),
         }
 
     def render(self, artifacts: AppArtifacts) -> None:
         isochrones = artifacts["isochrones"]
         lad_gdf = artifacts["lad_gdf"]
         lad_points = artifacts["lad_points"]
+        upload_signature = artifacts.get("upload_signature", "")
 
         render_page_header("Isochrone Travel Time Analysis")
 
-        show_boundaries = st.session_state.get("show_lad_boundaries", True)
         show_markers = True
         label_col = "LAD24NM"
 
@@ -405,9 +615,6 @@ class IsochronePlugin(AppPlugin):
             return
 
         iso_tmp = iso_filtered.copy()
-        if "Query_Tran" in iso_tmp.columns:
-            iso_tmp = iso_tmp[iso_tmp["Query_Tran"] != "driving+train"]
-
         if "Query_Tran" not in iso_tmp.columns:
             st.error("Isochrone data is missing 'Query_Tran'.")
             return
@@ -417,97 +624,167 @@ class IsochronePlugin(AppPlugin):
             st.error("No transport modes found after filtering.")
             return
 
-        transport_labels = {t: t.replace("_", " ").title() for t in transports}
+        transport_labels = {t: _format_transport_label(t) for t in transports}
         transport_options = [transport_labels[t] for t in transports]
         selected_label = st.sidebar.selectbox("Transport Mode", transport_options)
         tran = next((t for t, label in transport_labels.items() if label == selected_label), transports[0])
 
         time_col = "Query_Time" if "Query_Time" in isochrones.columns else "Query_Isoc"
-        with st.spinner("Calculating residents within travel time bands..."):
-            try:
-                pop_counts = _compute_population_within_bands(
-                    lad_gdf=lad_gdf,
-                    iso_filtered=iso_filtered[iso_filtered["Query_Tran"] == tran],
-                    time_col=time_col,
-                    thresholds=[30.0, 45.0, 60.0],
-                )
-            except Exception as exc:
-                pop_counts = {}
-                st.warning("Unable to compute resident KPIs: {0}".format(exc))
+        iso_mode = iso_filtered[iso_filtered["Query_Tran"] == tran].copy()
+        available_bands = _available_band_minutes(iso_mode, time_col)
+        if not available_bands:
+            st.error("No valid isochrone time bands found for the selected office and transport mode.")
+            return
 
-        if pop_counts:
-            render_kpi_strip(
-                [
-                    ("Residents within 30 min", "{0:,.0f}".format(pop_counts.get(30.0, 0.0))),
-                    ("Residents within 45 min", "{0:,.0f}".format(pop_counts.get(45.0, 0.0))),
-                    ("Residents within 60 min", "{0:,.0f}".format(pop_counts.get(60.0, 0.0))),
-                ],
-                columns=3,
+        core_band_set = {_normalise_band_value(value) for value in CORE_BANDS}
+        has_non_core_bands = any(_normalise_band_value(value) not in core_band_set for value in available_bands)
+        if has_non_core_bands:
+            analysis_mode = st.sidebar.radio(
+                "Analysis Mode",
+                options=[CORE_MODE_LABEL, EXTENDED_MODE_LABEL],
+                index=0,
             )
+        else:
+            analysis_mode = CORE_MODE_LABEL
+        display_bands, missing_core_bands = _resolve_display_bands(available_bands, analysis_mode)
+        if not display_bands:
+            st.warning(
+                "Core mode requires uploaded {0} min bands. Switch to Extended to analyse the available uploaded bands.".format(
+                    ", ".join(_format_minutes_label(value) for value in CORE_BANDS)
+                )
+            )
+            return
+
+        if analysis_mode == CORE_MODE_LABEL and missing_core_bands:
+            st.caption(
+                "Uploaded file is missing core bands: {0}. Showing available core bands only.".format(
+                    ", ".join("{0} min".format(_format_minutes_label(value)) for value in missing_core_bands)
+                )
+            )
+
+        if analysis_mode == EXTENDED_MODE_LABEL:
+            map_display_bands = st.sidebar.multiselect(
+                "Map Layers",
+                options=display_bands,
+                default=display_bands,
+                format_func=lambda value: "{0} min".format(_format_minutes_label(value)),
+            )
+        else:
+            map_display_bands = list(display_bands)
+
+        population_cache = _cache_namespace("population_counts")
+        population_key = (
+            upload_signature,
+            str(office_value or ""),
+            str(tran),
+            time_col,
+            tuple(display_bands),
+        )
+        if population_key in population_cache:
+            pop_counts = population_cache[population_key]
+        else:
+            with st.spinner("Calculating residents within travel time bands..."):
+                try:
+                    pop_counts = _compute_population_within_bands(
+                        lad_gdf=lad_gdf,
+                        iso_filtered=iso_mode,
+                        time_col=time_col,
+                        thresholds=display_bands,
+                    )
+                except Exception as exc:
+                    pop_counts = {}
+                    st.warning("Unable to compute resident KPIs: {0}".format(exc))
+            population_cache[population_key] = pop_counts
+
+        visible_pop_counts = {
+            float(band): float(pop_counts[band])
+            for band in map_display_bands
+            if band in pop_counts
+        }
+        if visible_pop_counts:
+            _render_population_summary(visible_pop_counts, analysis_mode)
+        elif pop_counts:
+            st.caption("No KPI bands selected. Choose one or more map layers to show resident KPIs.")
 
         commuters_df = None
         pop_label = None
-        if time_col in isochrones.columns and office_col_name:
+        commuter_cache = _cache_namespace("commuter_table")
+        commuter_key = (
+            upload_signature,
+            str(tran),
+            time_col,
+            str(office_col_name or ""),
+            tuple(display_bands),
+        )
+        if commuter_key in commuter_cache:
+            cached_commuter = commuter_cache[commuter_key]
+            commuters_df = cached_commuter.get("df")
+            pop_label = cached_commuter.get("label")
+        elif time_col in isochrones.columns and office_col_name:
             iso_all = isochrones.copy()
             if "Query_Tran" in iso_all.columns:
-                iso_all = iso_all[iso_all["Query_Tran"] != "driving+train"]
                 iso_all = iso_all[iso_all["Query_Tran"] == tran]
+            pop_label = "OA21 population by age"
             if not iso_all.empty:
                 age_cols, _ = _age_columns(lad_gdf)
-                pop_label = "OA21 population by age"
                 if age_cols is None:
                     st.warning("No age columns found for commuter bands table.")
                 else:
-                    lad_calc = lad_gdf[[*age_cols, "geometry"]].copy()
-                    for c in age_cols:
-                        lad_calc[c] = pd.to_numeric(lad_calc[c], errors="coerce").fillna(0)
-                    lad_calc = lad_calc.to_crs("EPSG:27700")
-                    lad_calc["lad_area"] = lad_calc.geometry.area
-
-                    iso_calc = iso_all[[office_col_name, time_col, "geometry"]].copy()
-                    iso_calc = iso_calc.to_crs("EPSG:27700")
-
-                    try:
-                        inter = gpd.overlay(iso_calc, lad_calc, how="intersection")
-                    except Exception as exc:
-                        st.warning("Commuter band table skipped: {0}".format(exc))
-                        inter = None
-
-                    if inter is not None and not inter.empty:
-                        inter_area = inter.geometry.area
-                        inter["area_frac"] = inter_area / inter["lad_area"]
+                    with st.spinner("Preparing commuter bands table..."):
+                        lad_calc = lad_gdf[[*age_cols, "geometry"]].copy()
                         for c in age_cols:
-                            inter[c] = inter[c] * inter["area_frac"]
+                            lad_calc[c] = pd.to_numeric(lad_calc[c], errors="coerce").fillna(0)
+                        lad_calc = lad_calc.to_crs("EPSG:27700")
+                        lad_calc["lad_area"] = lad_calc.geometry.area
 
-                        agg = (
-                            inter.groupby([office_col_name, time_col])[age_cols]
-                            .sum()
-                            .reset_index()
-                        )
-                        agg = agg.rename(columns={office_col_name: "Office", time_col: "Band"})
-                        agg["Band (mins)"] = agg["Band"].apply(lambda v: _format_band_minutes(time_col, v))
-                        if agg["Band (mins)"].notna().any():
-                            agg = agg.sort_values(by=["Office", "Band (mins)"])
-                        else:
-                            agg = agg.sort_values(by=["Office", "Band"])
-                        for c in age_cols:
-                            agg[c] = pd.to_numeric(agg[c], errors="coerce").round(0)
-                        agg = agg.drop(columns=["Band"])
-                        agg = agg.rename(
-                            columns={
-                                "Aged 15 to 19 years": "Age 15-19",
-                                "Aged 20 to 24 years": "Age 20-24",
-                                "Aged 25 to 29 years": "Age 25-29",
-                                "Aged 30 to 34 years": "Age 30-34",
-                                "Aged 35 to 39 years": "Age 35-39",
-                                "Aged 40 to 44 years": "Age 40-44",
-                                "Aged 45 to 49 years": "Age 45-49",
-                                "Aged 50 to 54 years": "Age 50-54",
-                                "Aged 55 to 59 years": "Age 55-59",
-                                "Aged 60 to 64 years": "Age 60-64",
-                            }
-                        )
-                        commuters_df = agg.reset_index(drop=True)
+                        iso_calc = iso_all[[office_col_name, time_col, "geometry"]].copy()
+                        iso_calc = iso_calc.to_crs("EPSG:27700")
+
+                        try:
+                            inter = gpd.overlay(iso_calc, lad_calc, how="intersection")
+                        except Exception as exc:
+                            st.warning("Commuter band table skipped: {0}".format(exc))
+                            inter = None
+
+                        if inter is not None and not inter.empty:
+                            inter_area = inter.geometry.area
+                            inter["area_frac"] = inter_area / inter["lad_area"]
+                            for c in age_cols:
+                                inter[c] = inter[c] * inter["area_frac"]
+
+                            agg = (
+                                inter.groupby([office_col_name, time_col])[age_cols]
+                                .sum()
+                                .reset_index()
+                            )
+                            agg = agg.rename(columns={office_col_name: "Office", time_col: "Band"})
+                            agg["Band (mins)"] = agg["Band"].apply(lambda v: _format_band_minutes(time_col, v))
+                            if agg["Band (mins)"].notna().any():
+                                agg["Band (mins)"] = agg["Band (mins)"].apply(_normalise_band_value)
+                                allowed_bands = {_normalise_band_value(value) for value in display_bands}
+                                agg = agg[agg["Band (mins)"].isin(allowed_bands)].copy()
+                                agg = agg.sort_values(by=["Office", "Band (mins)"])
+                            else:
+                                agg = agg.sort_values(by=["Office", "Band"])
+                            for c in age_cols:
+                                agg[c] = pd.to_numeric(agg[c], errors="coerce").round(0)
+                            agg = agg.drop(columns=["Band"])
+                            agg = agg.rename(
+                                columns={
+                                    "Aged 15 to 19 years": "Age 15-19",
+                                    "Aged 20 to 24 years": "Age 20-24",
+                                    "Aged 25 to 29 years": "Age 25-29",
+                                    "Aged 30 to 34 years": "Age 30-34",
+                                    "Aged 35 to 39 years": "Age 35-39",
+                                    "Aged 40 to 44 years": "Age 40-44",
+                                    "Aged 45 to 49 years": "Age 45-49",
+                                    "Aged 50 to 54 years": "Age 50-54",
+                                    "Aged 55 to 59 years": "Age 55-59",
+                                    "Aged 60 to 64 years": "Age 60-64",
+                                }
+                            )
+                            commuters_df = agg.reset_index(drop=True)
+            commuter_cache[commuter_key] = {"df": commuters_df, "label": pop_label}
 
         office_point = None
         lat_col = OFFICE_LAT_COL if OFFICE_LAT_COL in iso_filtered.columns else _get_col_case_insensitive(iso_filtered, OFFICE_LAT_COL)
@@ -526,28 +803,68 @@ class IsochronePlugin(AppPlugin):
                 if not lat_val.empty and not lon_val.empty:
                     office_point = (float(lat_val.iloc[0]), float(lon_val.iloc[0]))
 
-        with st.spinner("Building map..."):
-            try:
-                m = build_folium_map(
-                    gdf=lad_points,
-                    isochrones=iso_filtered,
-                    tran=tran,
-                    drop_driving_train=True,
-                    show_markers=show_markers,
-                    show_office_marker=True,
-                    postcode_col=label_col,
-                    office_point=office_point,
-                    lad_boundaries=lad_gdf if show_boundaries else None,
-                    show_isochrones=True,
-                )
-                html = folium_to_html(m)
-            except Exception as exc:
-                st.error("Map build failed: {0}".format(exc))
-                return
+        map_cache = _cache_namespace("map_html")
+        map_geometry_cache = _cache_namespace("map_geometry")
+        geometry_key = (
+            MAP_RENDER_VERSION,
+            upload_signature,
+            str(office_value or ""),
+            str(tran),
+            tuple(map_display_bands),
+        )
+        if geometry_key in map_geometry_cache:
+            map_payload = map_geometry_cache[geometry_key]
+        else:
+            with st.spinner("Preparing map geometry..."):
+                try:
+                    map_payload = _compute_map_geometry_payload(
+                        isochrones=iso_filtered,
+                        tran=tran,
+                        display_bands=map_display_bands,
+                    )
+                except Exception as exc:
+                    st.error("Map geometry prep failed: {0}".format(exc))
+                    return
+            map_geometry_cache[geometry_key] = map_payload
+
+        map_key = (
+            MAP_RENDER_VERSION,
+            upload_signature,
+            str(office_value or ""),
+            str(tran),
+            tuple(map_display_bands),
+            bool(show_markers),
+            bool(office_point),
+            office_point,
+        )
+        if map_key in map_cache:
+            html = map_cache[map_key]
+        else:
+            with st.spinner("Building map..."):
+                try:
+                    m = build_folium_map(
+                        gdf=lad_points,
+                        isochrones=iso_filtered,
+                        tran=tran,
+                        display_bands=map_display_bands,
+                        show_markers=show_markers,
+                        show_office_marker=True,
+                        postcode_col=label_col,
+                        office_point=office_point,
+                        lad_boundaries=lad_gdf,
+                        show_isochrones=True,
+                        map_payload=map_payload,
+                    )
+                    html = folium_to_html(m)
+                except Exception as exc:
+                    st.error("Map build failed: {0}".format(exc))
+                    return
+            map_cache[map_key] = html
 
         st.subheader("Map")
+        if not map_display_bands:
+            st.caption("No isochrone layers selected. Map is showing the office and postcode markers only.")
         components.html(html, height=860, scrolling=True)
-        st.checkbox("Show LAD Boundaries", value=show_boundaries, key="show_lad_boundaries")
 
         st.subheader("Commuters within bands (all offices)")
         if commuters_df is None or commuters_df.empty:

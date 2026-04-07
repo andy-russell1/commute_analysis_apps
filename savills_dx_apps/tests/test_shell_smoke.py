@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from streamlit.testing.v1 import AppTest
 
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
 def _app() -> AppTest:
-    at = AppTest.from_file("app.py")
+    at = AppTest.from_file(str(ROOT / "app.py"))
     at.default_timeout = 20
     return at
 
@@ -20,6 +25,7 @@ def test_shell_homepage_renders_sections_and_modules():
     assert "Commute Impact Assessment" in module_titles
     assert "Talent Analytics" in module_titles
     assert "Amenity Analysis" in module_titles
+    assert "EMEA Space & Occupancy Planning Studio" in module_titles
     assert "LENS Location Evaluation" in module_titles
 
 
@@ -40,7 +46,24 @@ def test_shell_can_open_commute_talent_amenity_and_lens_modules():
     assert not amenity.exception
     assert not amenity.error
 
-    lens = _app().run(timeout=20).button[7].click().run(timeout=20)
+    emea = _app().run(timeout=20).button[7].click().run(timeout=20)
+    assert [item.value for item in emea.title] == ["Home"]
+    emea_button_labels = [item.label for item in emea.button]
+    for label in [
+        "Home",
+        "Data Upload & Validation",
+        "Portfolio Baseline",
+        "Occupancy & Utilisation",
+        "Assumptions Manager",
+        "Scenario Builder",
+        "Scenario Comparison",
+        "Space Planning Outputs",
+        "Decision Pack",
+        "Exports & Audit",
+    ]:
+        assert label in emea_button_labels
+
+    lens = _app().run(timeout=20).button[8].click().run(timeout=20)
     assert [item.value for item in lens.title] == ["LENS Location Evaluation"]
     lens_subheaders = [item.value for item in lens.subheader]
     assert "Top Recommendations" in lens_subheaders
@@ -48,9 +71,10 @@ def test_shell_can_open_commute_talent_amenity_and_lens_modules():
 
 
 def test_shell_restart_returns_to_homepage():
-    lens = _app().run(timeout=20).button[7].click().run(timeout=20)
+    lens = _app().run(timeout=20).button[8].click().run(timeout=20)
     restarted = lens.button[-1].click().run(timeout=20)
     module_titles = [item.value for item in restarted.subheader]
     assert "Commute Impact Assessment" in module_titles
     assert "Talent Analytics" in module_titles
+    assert "EMEA Space & Occupancy Planning Studio" in module_titles
     assert "LENS Location Evaluation" in module_titles

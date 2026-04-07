@@ -8,6 +8,7 @@ import streamlit as st
 from apps.lens.common import safe_set_page_config
 from apps.lens.core import model, visuals
 from apps.lens.core.constants import MODE_ADVANCED
+from shared.ui.kpi import render_kpi_strip
 
 
 def _format_delta(value: float) -> str:
@@ -22,7 +23,7 @@ def _format_kpi_note_with_colour(note: str) -> str:
     match = re.search(r"([+-]\d+(?:\.\d+)?)", str(note))
     note_text = str(note)
     if not match:
-        return f"<span style='font-size:0.84rem;line-height:1.2;color:inherit;opacity:0.82;'>{note_text}</span>"
+        return f"<div style='font-size:0.82rem;line-height:1.25;color:inherit;opacity:0.82;margin-top:0.28rem;'>{note_text}</div>"
 
     delta_token = match.group(1)
     delta_value = float(delta_token)
@@ -41,34 +42,14 @@ def _format_kpi_note_with_colour(note: str) -> str:
         f"<span style='font-size:0.8rem;line-height:1;'>{arrow}</span>{delta_token}</span>"
     )
     rendered_text = note_text.replace(delta_token, coloured_delta, 1)
-    return f"<span style='font-size:0.84rem;line-height:1.2;color:inherit;opacity:0.9;'>({rendered_text})</span>"
+    return (
+        "<div style='font-size:0.82rem;line-height:1.25;color:inherit;opacity:0.9;margin-top:0.28rem;'>"
+        f"{rendered_text}</div>"
+    )
 
 
 def _render_snapshot_kpi_strip(items: list[tuple[str, str, str | None]]) -> None:
-    cells: list[str] = []
-    for label, value, note in items:
-        note_html = _format_kpi_note_with_colour(str(note)) if note else ""
-        value_and_note_html = (
-            "<div style='display:flex;align-items:flex-end;gap:0.52rem;flex-wrap:nowrap;'>"
-            f"<div style='font-size:1.9rem;color:inherit;line-height:1.05;font-weight:500;white-space:nowrap;'>{value}</div>"
-            f"{note_html}"
-            "</div>"
-            if note_html
-            else f"<div style='font-size:1.9rem;color:inherit;line-height:1.05;font-weight:500;white-space:nowrap;'>{value}</div>"
-        )
-        cells.append(
-            "<div style='min-width:0;padding:0.15rem 0.6rem 0.1rem 0.8rem;color:inherit;border-left:4px solid #FFDF00;'>"
-            f"<div style='font-size:0.78rem;color:inherit;opacity:0.72;line-height:1.2;margin-bottom:0.2rem;'>{label}</div>"
-            f"{value_and_note_html}"
-            "</div>"
-        )
-    st.markdown(
-        "<div style='display:grid;grid-template-columns:repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr));"
-        "gap:0.9rem;align-items:stretch;margin:0.15rem 0 1rem 0;'>"
-        + "".join(cells)
-        + "</div>",
-        unsafe_allow_html=True,
-    )
+    render_kpi_strip(items, columns=4, note_renderer=lambda note: _format_kpi_note_with_colour(str(note)))
 
 
 def _emphasise_benchmark_insight(item: str) -> str:

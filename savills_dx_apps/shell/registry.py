@@ -6,6 +6,7 @@ import streamlit as st
 
 from apps.amenity_analysis.module import MODULE as AMENITY_MODULE
 from apps.commute.module import MODULE as COMMUTE_MODULE
+from apps.emea_space_occupancy.module import MODULE as EMEA_SPACE_OCCUPANCY_MODULE
 from apps.eurostat.module import MODULE as EUROSTAT_MODULE
 from apps.isochrone.module import MODULE as ISOCHRONE_MODULE
 from apps.isochrone_commute.module import MODULE as ISOCHRONE_COMMUTE_MODULE
@@ -40,6 +41,7 @@ _MODULES: list[Module] = [
     TALENT_ANALYTICS_MODULE,
     EUROSTAT_MODULE,
     AMENITY_MODULE,
+    EMEA_SPACE_OCCUPANCY_MODULE,
     LENS_MODULE,
     PlaceholderWorkspaceModule(),
 ]

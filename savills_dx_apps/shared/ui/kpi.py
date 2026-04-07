@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from html import escape
-from typing import Sequence
+from typing import Callable, Sequence
 
 import streamlit as st
 
@@ -9,21 +9,29 @@ _DEFAULT_ACCENT_COLOUR = "#FFDF00"
 _ROW_GAP_REM = 0.9
 _MIN_CELL_WIDTH_REM = 10.5
 
-KpiStripItem = tuple[object, object] | tuple[object, object, object | None]
+KpiStripItem = (
+    tuple[object, object]
+    | tuple[object, object, object | None]
+    | tuple[object, object, object | None, str | None]
+)
+KpiNoteRenderer = Callable[[object], str]
 
 
 def _chunk_items(items: Sequence[KpiStripItem], size: int) -> list[list[KpiStripItem]]:
     return [list(items[index:index + size]) for index in range(0, len(items), size)]
 
 
-def _normalise_item(item: KpiStripItem) -> tuple[object, object, object | None]:
+def _normalise_item(item: KpiStripItem) -> tuple[object, object, object | None, str | None]:
     if len(item) == 2:
         label, value = item
-        return label, value, None
+        return label, value, None, None
     if len(item) == 3:
         label, value, note = item
-        return label, value, note
-    raise ValueError("KPI strip items must contain a label and value, with an optional note.")
+        return label, value, note, None
+    if len(item) == 4:
+        label, value, note, accent_color = item
+        return label, value, note, accent_color
+    raise ValueError("KPI strip items must contain a label and value, with optional note and accent colour.")
 
 
 def _render_kpi_cell(label: object, value: object, note: object | None, *, accent_color: str) -> str:
@@ -49,11 +57,39 @@ def _render_kpi_cell(label: object, value: object, note: object | None, *, accen
     )
 
 
+def _render_kpi_cell_with_note_renderer(
+    label: object,
+    value: object,
+    note: object | None,
+    *,
+    accent_color: str,
+    note_renderer: KpiNoteRenderer | None,
+) -> str:
+    if note_renderer is None or note in (None, ""):
+        return _render_kpi_cell(label, value, note, accent_color=accent_color)
+
+    safe_label = escape(str(label), quote=True)
+    safe_value = escape(str(value), quote=True)
+    safe_accent = escape(accent_color, quote=True)
+    note_html = note_renderer(note)
+    return (
+        "<div style='min-width:0;padding:0.15rem 0.6rem 0.1rem 0.8rem;"
+        "color:inherit;"
+        f"border-left:4px solid {safe_accent};'>"
+        "<div style='font-size:0.78rem;color:inherit;opacity:0.72;"
+        f"line-height:1.2;margin-bottom:0.2rem;'>{safe_label}</div>"
+        f"<div style='font-size:1.9rem;color:inherit;line-height:1.05;font-weight:500;'>{safe_value}</div>"
+        f"{note_html}"
+        "</div>"
+    )
+
+
 def render_kpi_strip(
     items: Sequence[KpiStripItem],
     *,
     columns: int = 4,
     accent_color: str = _DEFAULT_ACCENT_COLOUR,
+    note_renderer: KpiNoteRenderer | None = None,
 ) -> None:
     if not items:
         return
@@ -64,8 +100,14 @@ def render_kpi_strip(
     # Chunk rows to preserve a sensible desktop maximum while still allowing narrow screens to wrap cleanly.
     for row_items in _chunk_items(items, max_columns):
         cells = "".join(
-            _render_kpi_cell(label, value, note, accent_color=accent_color)
-            for label, value, note in (_normalise_item(item) for item in row_items)
+            _render_kpi_cell_with_note_renderer(
+                label,
+                value,
+                note,
+                accent_color=item_accent or accent_color,
+                note_renderer=note_renderer,
+            )
+            for label, value, note, item_accent in (_normalise_item(item) for item in row_items)
         )
         row_blocks.append(
             "<div style='display:grid;"
