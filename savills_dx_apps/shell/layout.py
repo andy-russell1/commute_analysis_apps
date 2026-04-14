@@ -20,11 +20,11 @@ def render_sidebar_actions(selected_name: str | None) -> dict[str, bool]:
             st.divider()
             st.caption("Current module")
             st.write(f"**{selected_name}**")
-            if st.button("Back to App Hub", key="dx_back_to_home", use_container_width=True):
+            if st.button("Back to App Hub", key="dx_back_to_home", width="stretch"):
                 actions["go_home"] = True
 
         st.divider()
-        if st.button("Restart Session", key="dx_restart", use_container_width=True):
+        if st.button("Restart Session", key="dx_restart", width="stretch"):
             actions["restart"] = True
 
     return actions
