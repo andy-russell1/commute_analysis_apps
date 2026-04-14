@@ -898,7 +898,7 @@ class CommutePlugin(AppPlugin):
                 if fig_map is None:
                     st.info("No mappable office points available.")
                 else:
-                    st.plotly_chart(fig_map, use_container_width=True, config={"scrollZoom": True})
+                    st.plotly_chart(fig_map, width="stretch", config={"scrollZoom": True})
             else:
                 if kpi_mode == "Emissions":
                     fig_map = employee_scatter_map(
@@ -917,7 +917,7 @@ class CommutePlugin(AppPlugin):
                 if fig_map is None:
                     st.info("No mappable employee points (missing lat/lon).")
                 else:
-                    st.plotly_chart(fig_map, use_container_width=True, config={"scrollZoom": True})
+                    st.plotly_chart(fig_map, width="stretch", config={"scrollZoom": True})
             st.toggle(
                 toggle_label,
                 key="explore_map_toggle_offices",
@@ -926,7 +926,7 @@ class CommutePlugin(AppPlugin):
 
             with st.expander("Employee-level table", expanded=False):
                 display_emp_tbl = emp_tbl.drop(columns=["lat", "lon"], errors="ignore")
-                st.dataframe(display_emp_tbl, use_container_width=True, height=520)
+                st.dataframe(display_emp_tbl, width="stretch", height=520)
 
                 st.download_button(
                     "Download employee table (CSV)",
@@ -1015,7 +1015,7 @@ class CommutePlugin(AppPlugin):
                     else []
                 )
                 fig = emissions_bar_figure(emissions_stats, method_label=method, office_order=office_order)
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
 
                 st.divider()
                 st.subheader("Office statistics")
@@ -1057,7 +1057,7 @@ class CommutePlugin(AppPlugin):
                     else []
                 )
                 fig = threshold_stacked_bar_figure(bands_df, method_label=method, office_order=office_order)
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
 
                 st.divider()
                 st.subheader("Office statistics")
@@ -1130,8 +1130,8 @@ class CommutePlugin(AppPlugin):
                 )
 
             vs_col = "vs Current (kgCO2e)" if "vs Current (kgCO2e)" in display_stats.columns else "vs Current (mins)"
-            styled_stats = display_stats.style.applymap(color_gradient_vs, subset=[vs_col])
-            st.dataframe(styled_stats, use_container_width=True, hide_index=True)
+            styled_stats = display_stats.style.map(color_gradient_vs, subset=[vs_col])
+            st.dataframe(styled_stats, width="stretch", hide_index=True)
 
         with tab_downloads:
             st.subheader("Downloads")
@@ -1148,7 +1148,7 @@ class CommutePlugin(AppPlugin):
             )
 
             with st.expander("View table", expanded=False):
-                st.dataframe(wide, use_container_width=True, height=420)
+                st.dataframe(wide, width="stretch", height=420)
 
             st.divider()
             st.markdown("**Master**")
@@ -1163,9 +1163,35 @@ class CommutePlugin(AppPlugin):
             )
 
             with st.expander("View table", expanded=False):
-                st.dataframe(wide_all, use_container_width=True, height=420)
+                st.dataframe(wide_all, width="stretch", height=420)
 
 
 
 
-PLUGIN = CommutePlugin()
+from apps.commute_core.io.upload import build_commute_artifacts as _build_commute_artifacts
+from apps.commute_core.io.upload import validate_commute_upload as _validate_commute_upload
+from apps.commute_core.pages.commute import render_commute_dashboard as _render_commute_dashboard
+
+
+class CoreBackedCommutePlugin(AppPlugin):
+    metadata = AppMetadata(
+        id="commute",
+        name="Commute Analysis",
+        description="Upload a Successful.csv export and explore commute metrics.",
+        accepted_upload_types=["csv"],
+        upload_label="Upload Successful.csv",
+        upload_help="Expected format: long table with Employee, Office, Metric, Value, and method columns.",
+    )
+
+    def validate(self, upload: UploadPayload) -> None:
+        _validate_commute_upload(upload.name, upload.bytes_data, upload.ext)
+
+    def build(self, upload: UploadPayload, log) -> AppArtifacts:
+        return _build_commute_artifacts(upload.name, upload.bytes_data, log=log)
+
+    def render(self, artifacts: AppArtifacts) -> None:
+        _render_commute_dashboard(artifacts)
+
+
+CommutePlugin = CoreBackedCommutePlugin
+PLUGIN = CoreBackedCommutePlugin()
