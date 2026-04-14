@@ -1165,33 +1165,37 @@ class CommutePlugin(AppPlugin):
             with st.expander("View table", expanded=False):
                 st.dataframe(wide_all, width="stretch", height=420)
 
+PLUGIN = CommutePlugin()
+
+try:
+    from apps.commute_core.io.upload import build_commute_artifacts as _build_commute_artifacts
+    from apps.commute_core.io.upload import validate_commute_upload as _validate_commute_upload
+    from apps.commute_core.pages.commute import render_commute_dashboard as _render_commute_dashboard
+except ModuleNotFoundError:
+    _build_commute_artifacts = None
+    _validate_commute_upload = None
+    _render_commute_dashboard = None
+else:
+
+    class CoreBackedCommutePlugin(AppPlugin):
+        metadata = AppMetadata(
+            id="commute",
+            name="Commute Analysis",
+            description="Upload a Successful.csv export and explore commute metrics.",
+            accepted_upload_types=["csv"],
+            upload_label="Upload Successful.csv",
+            upload_help="Expected format: long table with Employee, Office, Metric, Value, and method columns.",
+        )
+
+        def validate(self, upload: UploadPayload) -> None:
+            _validate_commute_upload(upload.name, upload.bytes_data, upload.ext)
+
+        def build(self, upload: UploadPayload, log) -> AppArtifacts:
+            return _build_commute_artifacts(upload.name, upload.bytes_data, log=log)
+
+        def render(self, artifacts: AppArtifacts) -> None:
+            _render_commute_dashboard(artifacts)
 
 
-
-from apps.commute_core.io.upload import build_commute_artifacts as _build_commute_artifacts
-from apps.commute_core.io.upload import validate_commute_upload as _validate_commute_upload
-from apps.commute_core.pages.commute import render_commute_dashboard as _render_commute_dashboard
-
-
-class CoreBackedCommutePlugin(AppPlugin):
-    metadata = AppMetadata(
-        id="commute",
-        name="Commute Analysis",
-        description="Upload a Successful.csv export and explore commute metrics.",
-        accepted_upload_types=["csv"],
-        upload_label="Upload Successful.csv",
-        upload_help="Expected format: long table with Employee, Office, Metric, Value, and method columns.",
-    )
-
-    def validate(self, upload: UploadPayload) -> None:
-        _validate_commute_upload(upload.name, upload.bytes_data, upload.ext)
-
-    def build(self, upload: UploadPayload, log) -> AppArtifacts:
-        return _build_commute_artifacts(upload.name, upload.bytes_data, log=log)
-
-    def render(self, artifacts: AppArtifacts) -> None:
-        _render_commute_dashboard(artifacts)
-
-
-CommutePlugin = CoreBackedCommutePlugin
-PLUGIN = CoreBackedCommutePlugin()
+    CommutePlugin = CoreBackedCommutePlugin
+    PLUGIN = CoreBackedCommutePlugin()
